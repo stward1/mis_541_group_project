@@ -28,7 +28,8 @@ Questions we're answering:
     Do the predictors vary for Uber vs. Lyft?
     How does rideshare price vary in different parts of Boston?
     Do the rideshare prices relate to real estate prices?
-
+    Maybe something with weather and pricing/demand for rideshares?
+    Do people use rideshares more when it's rainy/sunny/etc.?
 
 """
 
@@ -42,8 +43,15 @@ import pandas as pd
     1. LOADING THE DATA
 """
 
+# load the file
 df = pd.read_csv('rideshare_kaggle.csv')
+
+# early exploration
 print(df[['price', 'source', 'destination', 'cab_type']])
+print(df.columns)
+
+print(df[['short_summary', 'long_summary']])
+print(df['short_summary'].value_counts())
 
 """
     2. CLEANING THE DATA
