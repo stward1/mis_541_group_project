@@ -31,6 +31,12 @@ Questions we're answering:
     Maybe something with weather and pricing/demand for rideshares?
     Do people use rideshares more when it's rainy/sunny/etc.?
 
+    business impact aspects:
+        * should you prepare more drivers based on the weather forecast?
+        * consumer and business side (things as a user and uber/lyft)
+        
+    timeline: due week of the 6th
+
 """
 
 """
@@ -58,6 +64,7 @@ print(df['short_summary'].value_counts())
 """
 
 # code here
+# get this done shortly to open up later exploration
 
 """
     3. DISTRIBUTION EXPLORATION
