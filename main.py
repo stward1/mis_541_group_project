@@ -85,7 +85,12 @@ print(df.isnull().any())
     3. DISTRIBUTION EXPLORATION
 """
 
-# code here
+# printing the value counts for each column to double check that no data is missing but not NaN (like using 'missing' to indicate)
+# at a glance everything looks clear
+for column in df.columns:
+    print(df[column].value_counts())
+
+# next up (and this should maybe go in section 2) is removing columns we don't need and converting date/time stuff to datetime objects
 
 """
     4. CORRELATION MATRIX
