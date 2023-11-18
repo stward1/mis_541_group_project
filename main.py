@@ -63,8 +63,23 @@ print(df['short_summary'].value_counts())
     2. CLEANING THE DATA
 """
 
-# code here
-# get this done shortly to open up later exploration
+# checking to see if any columns have null values: only price has missing values
+print(df.isnull().any())
+
+# 55,095 price values are missing
+print(f"Number of missing price values: {df['price'].isnull().sum()}")
+
+# there are 693,071 records total
+print(f'Number of records: {len(df)}')
+
+# that's less than 8%
+print(f"Percent missing price: {df['price'].isnull().sum() / len(df)}")
+
+# because of the small percent missing, we decided to remove them from the dataset
+df = df.dropna()
+
+# double-checking to verify: df now has no missing values
+print(df.isnull().any())
 
 """
     3. DISTRIBUTION EXPLORATION
