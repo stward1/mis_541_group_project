@@ -44,6 +44,7 @@ Questions we're answering:
 """
 
 import pandas as pd
+import matplotlib.pyplot as plt
 
 """
     1. LOADING THE DATA
@@ -91,12 +92,37 @@ for column in df.columns:
     print(df[column].value_counts())
 
 # next up (and this should maybe go in section 2) is removing columns we don't need and converting date/time stuff to datetime objects
+# going to determine which we don't need with a correlation matrix
 
 """
     4. CORRELATION MATRIX
 """
 
-# code here
+# getting correlation matrix of variables to price
+price_correlation_df = df.corr()['price'].to_frame()
+
+# renaming column
+price_correlation_df.columns = ['correlation']
+
+# because we care about abs value, making a column to preserve sign
+price_correlation_df['relationship'] = price_correlation_df['correlation'].apply(lambda x: 'direct' if x >= 0 else 'inverse')
+
+# removing sign from correlation
+price_correlation_df['correlation'] = price_correlation_df['correlation'].apply(lambda x: abs(x))
+
+# sorting descending by correlation
+price_correlation_df = price_correlation_df.sort_values(['correlation'], ascending=False)
+
+# no reason to preserve price since it's the variable
+price_correlation_df = price_correlation_df[1:]
+
+# printing the result and plotting
+print(price_correlation_df)
+
+# maybe add color code relationship to this? honestly the takeaway is distance and surge are the only real numeric ones that matter
+plt.figure()
+price_correlation_df.plot(kind='bar')
+plt.show()
 
 """
     5. LINEAR REGRESSION
