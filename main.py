@@ -45,6 +45,7 @@ Questions we're answering:
 
 import pandas as pd
 import matplotlib.pyplot as plt
+from statsmodels.formula.api import ols, logit
 
 """
     1. LOADING THE DATA
@@ -82,6 +83,9 @@ df = df.dropna()
 # double-checking to verify: df now has no missing values
 print(df.isnull().any())
 
+# removing id and timestamp (all in eastern)
+df = df.drop(columns=['id', 'timestamp'])
+
 """
     3. DISTRIBUTION EXPLORATION
 """
@@ -94,9 +98,42 @@ for column in df.columns:
 # next up (and this should maybe go in section 2) is removing columns we don't need and converting date/time stuff to datetime objects
 # going to determine which we don't need with a correlation matrix
 
+# histograms of some of the qualitative variables
+
+# product id? i think this is the type of uber/lyft; idk what name is in comparison
+print(df['product_id'].value_counts())
+print(df['name'].value_counts())
+
+# product id has some... hard to decipher guid values; name does not and they seem substitutable
+print(df[['product_id', 'name']].value_counts())
+# on second glance, product_id has uber values as guids, but name is fixed for everything
+# we'll just use name then
+df = df.drop('product_id', axis=1)
+
+# making a histogram of names
+name_df = df[['name', 'is_uber']].value_counts().to_frame()
+name_df = name_df.reset_index()
+name_df = name_df.set_index('name')
+
+# as i do this, it occurs to me... these are all the same frequency? or very similar
+# that's really odd to me, I'm wondering if this is a sample with control for product type
+
+# going to skip a useless histogram for now, moving onto making a chart of average price
+name_avg_price_df = df.groupby(['name']).mean()['price']
+
+# this seems useful
+plt.figure()
+name_avg_price_df.plot(kind='bar')
+plt.show()
+
+# pick up with more of these: categorical variable price charts
+
 """
     4. CORRELATION MATRIX
 """
+
+# making a flag field for cab type
+df['is_uber'] = df['cab_type'].apply(lambda x: 1 if x == 'Uber' else 0)
 
 # getting correlation matrix of variables to price
 price_correlation_df = df.corr()['price'].to_frame()
@@ -128,7 +165,25 @@ plt.show()
     5. LINEAR REGRESSION
 """
 
-# code here
+# making a model with distance, surge, and both
+distance_model = ols("price ~ distance", df).fit()
+surge_model = ols("price ~ surge_multiplier", df).fit()
+combo_model = ols("price ~ distance + surge_multiplier", df).fit()
+
+# examining summaries of all models
+print(distance_model.summary())
+print(surge_model.summary())
+print(combo_model.summary())
+
+# update: appears uber vs. lyft is notable (with uber being more expensive)
+cab_type_model = ols("price ~ is_uber", df).fit()
+print(cab_type_model.summary())
+
+# making a full regression model with cab
+model_with_cab = ols('price ~ distance + surge_multiplier + is_uber', df).fit()
+print(model_with_cab.summary())
+
+# very small bump to r-squared...
 
 """
     6. UBER VS. LYFT LINEAR REGRESSION
