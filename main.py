@@ -86,9 +86,16 @@ print(df.isnull().any())
 # removing id and timestamp (all in eastern)
 df = df.drop(columns=['id', 'timestamp'])
 
+# making a flag field for cab type
+df['is_uber'] = df['cab_type'].apply(lambda x: 1 if x == 'Uber' else 0)
+
 """
     3. DISTRIBUTION EXPLORATION
 """
+
+# for later analysis, splitting uber and lyft frames
+uber_frame = df[df['is_uber'] == 1]
+lyft_frame = df[df['is_uber'] == 0]
 
 # printing the value counts for each column to double check that no data is missing but not NaN (like using 'missing' to indicate)
 # at a glance everything looks clear
@@ -119,12 +126,112 @@ name_df = name_df.set_index('name')
 # that's really odd to me, I'm wondering if this is a sample with control for product type
 
 # going to skip a useless histogram for now, moving onto making a chart of average price
-name_avg_price_df = df.groupby(['name']).mean()['price']
+# maybe do [price]mean, i think it's faster?
+name_avg_price_df = df.groupby(['name'])['price'].mean()
+uber_name_df = uber_frame.groupby(['name'])['price'].mean()
+lyft_name_df = lyft_frame.groupby(['name'])['price'].mean()
 
-# this seems useful
+# this seems useful: average price by type
 plt.figure()
-name_avg_price_df.plot(kind='bar')
+lyft_name_df.plot(kind='bar', color='red')
+plt.title('Average Price by Ride Type (Lyft)')
+plt.ylabel('Average Price (USD)')
+plt.xlabel('Ride Type')
+plt.xticks(rotation=45)
 plt.show()
+
+plt.figure()
+uber_name_df.plot(kind='bar', color='green')
+plt.title('Average Price by Ride Type (Uber)')
+plt.ylabel('Average Price (USD)')
+plt.xlabel('Ride Type')
+plt.xticks(rotation=45)
+plt.show()
+
+# think it would be cool to compare average price to total revenue (sum of price)
+# this is... not useful because there are about the same number of each type
+# which i noticed earlier... oops lol
+uber_name_df = uber_frame.groupby(['name'])['price'].sum()
+lyft_name_df = lyft_frame.groupby(['name'])['price'].sum()
+
+# this seems useful: total price (revenue) by type
+plt.figure()
+lyft_name_df.plot(kind='bar', color='red')
+plt.title('Total Revenue by Ride Type (Lyft)')
+plt.ylabel('Revenue (USD)')
+plt.xlabel('Ride Type')
+plt.xticks(rotation=45)
+plt.show()
+
+plt.figure()
+uber_name_df.plot(kind='bar', color='green')
+plt.title('Total Revenue by Ride Type (Uber)')
+plt.ylabel('Revenue (USD)')
+plt.xlabel('Ride Type')
+plt.xticks(rotation=45)
+plt.show()
+
+
+
+# weather average price: literally no effect, like at all lol
+weather_avg_price_df = df.groupby(['short_summary'])['price'].mean()
+weather_avg_price_uber = uber_frame.groupby(['short_summary'])['price'].mean()
+weather_avg_price_lyft = lyft_frame.groupby(['short_summary'])['price'].mean()
+plt.figure()
+weather_avg_price_df.plot(kind='line')
+weather_avg_price_uber.plot(kind='line', color='green')
+weather_avg_price_lyft.plot(kind='line', color='red')
+plt.title('Average Price by Weather')
+plt.ylabel('Average Price (USD)')
+plt.xlabel('Weather')
+plt.xticks(rotation=45)
+plt.show()
+
+weather_avg_price_df = df.groupby(['short_summary'])['distance'].mean()
+plt.figure()
+weather_avg_price_df.plot(kind='bar')
+plt.show()
+
+# how about by hour of the day
+hour_avg_price_df = df.groupby(['hour'])['price'].mean()
+plt.figure()
+hour_avg_price_df.plot(kind='line')
+plt.show()
+
+# what about price per mile as a metric
+df['price_dist_ratio'] = df['price'] / df['distance']
+
+# now *this* is a little more interesting: the price per mile spikes around rush hours and midday
+hour_avg_price_ratio_df = df.groupby(['hour'])['price_dist_ratio'].mean()
+hour_avg_price_ratio_uber = uber_frame.groupby(['hour'])['price_dist_ratio'].mean()
+hour_avg_price_ratio_lyft = lyft_frame.groupby(['hour'])['price_dist_ratio'].mean()
+
+# this is examining the price/distance ratio, which is think is dollars and miles
+plt.figure()
+hour_avg_price_ratio_df.plot(kind='line')
+hour_avg_price_ratio_uber.plot(kind='line', color='green')
+hour_avg_price_ratio_lyft.plot(kind='line', color='red')
+plt.title('Average Price-Distance Ratio by Hour')
+plt.xlabel('Hour')
+plt.ylabel('Average Price-Distance Ratio (USD per Mile)')
+plt.show()
+
+# surge mult: really spikes around lunch
+hour_avg_surge_df = df.groupby(['hour'])['surge_multiplier'].mean()
+uber_avg_surge_df = uber_frame.groupby(['hour'])['surge_multiplier'].mean()
+lyft_avg_surge_df = lyft_frame.groupby(['hour'])['surge_multiplier'].mean()
+
+plt.figure()
+# hour_avg_surge_df.plot(kind='line')
+# uber_avg_surge_df.plot(kind='line', color='green')
+lyft_avg_surge_df.plot(kind='line', color='red')
+plt.title('Average Surge Multiplier by Hour')
+plt.xlabel('Hour')
+plt.ylabel('Average Surge Multiplier')
+plt.show()
+
+# uber doesn't use surge multiplier
+
 
 # pick up with more of these: categorical variable price charts
 
@@ -132,8 +239,6 @@ plt.show()
     4. CORRELATION MATRIX
 """
 
-# making a flag field for cab type
-df['is_uber'] = df['cab_type'].apply(lambda x: 1 if x == 'Uber' else 0)
 
 # getting correlation matrix of variables to price
 price_correlation_df = df.corr()['price'].to_frame()
