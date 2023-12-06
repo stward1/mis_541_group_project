@@ -89,6 +89,10 @@ df = df.drop(columns=['id', 'timestamp'])
 # making a flag field for cab type
 df['is_uber'] = df['cab_type'].apply(lambda x: 1 if x == 'Uber' else 0)
 
+# what about price per mile as a metric
+df['price_dist_ratio'] = df['price'] / df['distance']
+
+
 """
     3. DISTRIBUTION EXPLORATION
 """
@@ -198,8 +202,13 @@ plt.figure()
 hour_avg_price_df.plot(kind='line')
 plt.show()
 
-# what about price per mile as a metric
-df['price_dist_ratio'] = df['price'] / df['distance']
+
+
+
+
+uber_name_df = uber_frame.groupby(['name'])['price'].sum()
+lyft_name_df = lyft_frame.groupby(['name'])['price'].sum()
+
 
 # now *this* is a little more interesting: the price per mile spikes around rush hours and midday
 hour_avg_price_ratio_df = df.groupby(['hour'])['price_dist_ratio'].mean()
@@ -258,12 +267,25 @@ price_correlation_df = price_correlation_df.sort_values(['correlation'], ascendi
 # no reason to preserve price since it's the variable
 price_correlation_df = price_correlation_df[1:]
 
+# pruning out price_dist_ratio, that's not meant to be in there, it uses price
+price_correlation_df = price_correlation_df.drop(['price_dist_ratio'], axis=0)
+
+# really only the top 5 or so matter
+price_correlation_df = price_correlation_df[0:5]
+
+price_correlation_df = price_correlation_df.reset_index()
+price_correlation_df.columns = ['variable', 'correlation', 'relationship']
+
 # printing the result and plotting
 print(price_correlation_df)
 
 # maybe add color code relationship to this? honestly the takeaway is distance and surge are the only real numeric ones that matter
 plt.figure()
-price_correlation_df.plot(kind='bar')
+plt.bar(x=price_correlation_df['variable'], height=price_correlation_df['correlation'], color=price_correlation_df['relationship'].map({'direct':'blue','inverse':'black'}))
+plt.xticks(rotation=45)
+plt.xlabel('Variable')
+plt.ylabel('Correlation Strength')
+plt.title('Overall Variable Correlations (Top 5)')
 plt.show()
 
 """
@@ -295,12 +317,115 @@ print(model_with_cab.summary())
 """
 
 # code here
+# do this tonight
+
+"""
+    6a. Uber
+"""
+
+
+price_correlation_df = uber_frame.corr()['price'].to_frame()
+
+# renaming column
+price_correlation_df.columns = ['correlation']
+
+# because we care about abs value, making a column to preserve sign
+price_correlation_df['relationship'] = price_correlation_df['correlation'].apply(lambda x: 'direct' if x >= 0 else 'inverse')
+
+# removing sign from correlation
+price_correlation_df['correlation'] = price_correlation_df['correlation'].apply(lambda x: abs(x))
+
+# sorting descending by correlation
+price_correlation_df = price_correlation_df.sort_values(['correlation'], ascending=False)
+
+# no reason to preserve price since it's the variable
+price_correlation_df = price_correlation_df[1:]
+
+# pruning out price_dist_ratio, that's not meant to be in there, it uses price
+price_correlation_df = price_correlation_df.drop(['price_dist_ratio'], axis=0)
+
+# really only the top 5 or so matter
+price_correlation_df = price_correlation_df[0:5]
+
+price_correlation_df = price_correlation_df.reset_index()
+price_correlation_df.columns = ['variable', 'correlation', 'relationship']
+
+# printing the result and plotting
+print(price_correlation_df)
+
+# maybe add color code relationship to this? honestly the takeaway is distance and surge are the only real numeric ones that matter
+plt.figure()
+plt.bar(x=price_correlation_df['variable'], height=price_correlation_df['correlation'], color=price_correlation_df['relationship'].map({'direct':'green','inverse':'black'}))
+plt.xticks(rotation=45)
+plt.xlabel('Variable')
+plt.ylabel('Correlation Strength')
+plt.title('Uber Variable Correlations (Top 5)')
+plt.show()
+
+
+distance_model = ols("price ~ distance", uber_frame).fit()
+
+# examining summaries of all models
+print(distance_model.summary())
+
+"""
+    6b. Lyft
+"""
+
+price_correlation_df = lyft_frame.corr()['price'].to_frame()
+
+# renaming column
+price_correlation_df.columns = ['correlation']
+
+# because we care about abs value, making a column to preserve sign
+price_correlation_df['relationship'] = price_correlation_df['correlation'].apply(lambda x: 'direct' if x >= 0 else 'inverse')
+
+# removing sign from correlation
+price_correlation_df['correlation'] = price_correlation_df['correlation'].apply(lambda x: abs(x))
+
+# sorting descending by correlation
+price_correlation_df = price_correlation_df.sort_values(['correlation'], ascending=False)
+
+# no reason to preserve price since it's the variable
+price_correlation_df = price_correlation_df[1:]
+
+# pruning out price_dist_ratio, that's not meant to be in there, it uses price
+price_correlation_df = price_correlation_df.drop(['price_dist_ratio'], axis=0)
+
+# really only the top 5 or so matter
+price_correlation_df = price_correlation_df[0:5]
+
+price_correlation_df = price_correlation_df.reset_index()
+price_correlation_df.columns = ['variable', 'correlation', 'relationship']
+
+# printing the result and plotting
+print(price_correlation_df)
+
+# maybe add color code relationship to this? honestly the takeaway is distance and surge are the only real numeric ones that matter
+plt.figure()
+plt.bar(x=price_correlation_df['variable'], height=price_correlation_df['correlation'], color=price_correlation_df['relationship'].map({'direct':'red','inverse':'black'}))
+plt.xticks(rotation=45)
+plt.xlabel('Variable')
+plt.ylabel('Correlation Strength')
+plt.title('Lyft Variable Correlations (Top 5)')
+plt.show()
+
+
+distance_model = ols("price ~ distance", lyft_frame).fit()
+surge_model = ols("price ~ surge_multiplier", lyft_frame).fit()
+combo_model = ols("price ~ distance + surge_multiplier", lyft_frame).fit()
+
+# examining summaries of all models
+print(distance_model.summary())
+print(surge_model.summary())
+print(combo_model.summary())
 
 """
     7. PRICE MAP
 """
 
 # code here
+# maybe?
 
 """
     8. something with real estate prices?
