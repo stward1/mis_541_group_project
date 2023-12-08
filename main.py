@@ -45,7 +45,8 @@ Questions we're answering:
 
 import pandas as pd
 import matplotlib.pyplot as plt
-from statsmodels.formula.api import ols, logit
+from statsmodels.formula.api import ols
+import statistics
 
 """
     1. LOADING THE DATA
@@ -60,6 +61,9 @@ print(df.columns)
 
 print(df[['short_summary', 'long_summary']])
 print(df['short_summary'].value_counts())
+
+# pulling in average rent for each neighborhood via rentcafe: https://www.rentcafe.com/average-rent-market-trends/us/ma/boston/
+rent_df = pd.read_csv('boston_neighborhood_rentcafe.csv')
 
 """
     2. CLEANING THE DATA
@@ -312,6 +316,11 @@ print(model_with_cab.summary())
 
 # very small bump to r-squared...
 
+# real estate modeling
+estate_model = ols("price ~ distance + surge_multiplier + source_rent + destination_rent", df).fit()
+print(estate_model.summary())
+
+
 """
     6. UBER VS. LYFT LINEAR REGRESSION
 """
@@ -427,9 +436,148 @@ print(combo_model.summary())
 # code here
 # maybe?
 
+# graphing rents
+# restaurant_review_frame.join(other=restaurant_ids_dataframe,on='business_id',how='left')
+
+# df.join(other=rent_df, on)
+
+# getting a list of all the neighborhoods in the df and from the rent-cafe data
+source_neighborhoods = list(df['source'].unique())
+source_neighborhoods.sort()
+destination_neighborhoods = list(df['destination'].unique())
+destination_neighborhoods.sort()
+rent_neighborhoods = list(rent_df['neighborhood'])
+rent_neighborhoods.sort()
+
+# printing each out to see what needs to be renamed/removed
+print(source_neighborhoods)
+print(destination_neighborhoods)
+print(rent_neighborhoods)
+
+blank_col = [0] * len(rent_df)
+rent_df['isKept'] = blank_col
+rent_df = rent_df.set_index(['neighborhood'])
+
+
+# manually looking through results and figuring out how to rename
+rent_df.loc['Back Bay', ['isKept']] = 1
+rent_df.loc['Beacon Hill', ['isKept']] = 1
+
+# Boston University missing, as per googling will make this Fenway
+rent_df.loc['Boston University'] = rent_df.loc['Fenway - Kenmore']
+rent_df.loc['Boston University', ['isKept']] = 1
+
+# Fenway - Kenmore becomes Fenway
+rent_df.loc['Fenway'] = rent_df.loc['Fenway - Kenmore']
+rent_df.loc['Fenway', ['isKept']] = 1
+
+# Downtown - Financial District becomes Financial District
+rent_df.loc['Financial District'] = rent_df.loc['Downtown - Financial District']
+rent_df.loc['Financial District', ['isKept']] = 1
+
+# haymarket square is between west and south end? going to use average of south/west end rent
+rent_df.loc['Haymarket Square'] = rent_df.loc['South End Boston']
+south_west_avg = statistics.mean([rent_df.loc['South End Boston']['average_rent'], rent_df.loc['West End Boston']['average_rent']])
+rent_df.loc['Haymarket Square', ['average_rent']] = south_west_avg
+rent_df.loc['Haymarket Square', ['isKept']] = 1
+
+# north end boston becomes north end
+rent_df.loc['North End'] = rent_df.loc['North End Boston']
+rent_df.loc['North End', ['isKept']] = 1
+
+# north station is between north/west end, doing average
+rent_df.loc['North Station'] = rent_df.loc['North End Boston']
+north_west_avg = statistics.mean([rent_df.loc['North End Boston']['average_rent'], rent_df.loc['West End Boston']['average_rent']])
+rent_df.loc['North Station', ['average_rent']] = north_west_avg
+rent_df.loc['North Station', ['isKept']] = 1
+
+# northeastern university is in fenway - kenmore (already renamed to fenway and kept)
+rent_df.loc['Northeastern University'] = rent_df.loc['Fenway']
+
+# south station is downtown, which was renamed to financial district
+rent_df.loc['South Station'] = rent_df.loc['Financial District']
+
+# theatre district is bay village
+rent_df.loc['Theatre District'] = rent_df.loc['Bay Village']
+rent_df.loc['Theatre District', ['isKept']] = 1
+
+# west end boston becomes west end
+rent_df.loc['West End'] = rent_df.loc['West End Boston']
+rent_df.loc['West End', ['isKept']] = 1
+
+cleaned_rent_df = rent_df[rent_df['isKept'] == 1]
+cleaned_rent_df = cleaned_rent_df.drop(['isKept'], axis=1)
+
+cleaned_rent_df = cleaned_rent_df.set_index(['neighborhood'])
+# plotting quick bar chart... this wasn't as dramatic as i was hoping it would be
+plt.figure()
+cleaned_rent_df.plot(kind='bar')
+plt.xticks(rotation=45)
+plt.title('Average Rent by Neighborhood')
+plt.xlabel('Neighborhood')
+plt.ylabel('Average Rent (USD)')
+plt.show()
+
+
+cleaned_rent_df = cleaned_rent_df.reset_index()
+# joining back to the main df
+df = pd.merge(df, cleaned_rent_df, how='left', left_on='source', right_on='neighborhood')
+df = df.rename(columns={'average_rent': 'source_rent'})
+df = df.drop(['neighborhood'], axis=1)
+# doing the same for destination
+df = pd.merge(df, cleaned_rent_df, how='left', left_on='destination', right_on='neighborhood')
+df = df.rename(columns={'average_rent': 'destination_rent'})
+df = df.drop(['neighborhood'], axis=1)
+
+
+
+
 """
     8. something with real estate prices?
 """
+
+# making a map of the prices, very disappointing
+# use c = price bin and make it x / mean price to have a nice gradient instead
+plt.figure()
+plt.scatter(df['longitude'], df['latitude'], s=1, c=df['price'], alpha=0.5)
+plt.title('Attempted Price Map of Boston')
+plt.xlabel('Longitude')
+plt.xlabel('Latitude')
+plt.show()
+
+
+# what about average price of the different neighborhoods?
+# source average price frame
+source_price_df = df.groupby(['source'])['price'].mean().to_frame()
+source_price_df.columns = ['avg_source_price']
+
+# destination average price frame
+destination_price_df = df.groupby(['destination'])['price'].mean().to_frame()
+destination_price_df.columns = ['avg_destination_price']
+
+# adding in rent price
+rent_price_df = cleaned_rent_df
+rent_price_df = rent_price_df.reset_index()
+rent_price_df.columns = ['source', 'avg_rent_thousands']
+rent_price_df = rent_price_df.set_index(['source'])
+
+# joining on index
+neighborhood_df = source_price_df.merge(destination_price_df, how='left', left_index=True, right_index=True)
+neighborhood_df = neighborhood_df.merge(rent_price_df, how='left', left_index=True, right_index=True)
+neighborhood_df['avg_rent_thousands'] = neighborhood_df['avg_rent_thousands'] / 1000
+
+# weak relationship between rent and rideshare prices
+plt.figure()
+neighborhood_df.plot(kind='bar')
+plt.title('Average Pricing and Rent by Neighborhood')
+plt.xlabel('Neighborhood')
+plt.xticks(fontsize=8)
+plt.ylabel('Average Price (USD) or Rent (thousands USD)')
+plt.show()
+
+# modest inverse correlation
+print(neighborhood_df.corr().to_string())
+
 
 # code here
 
