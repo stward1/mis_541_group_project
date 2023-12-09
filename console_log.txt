@@ -1,0 +1,1831 @@
+Initializing...
+________________________________________________________________
+
+CLEANING RIDESHARE DATA:
+id                             False
+timestamp                      False
+hour                           False
+day                            False
+month                          False
+datetime                       False
+timezone                       False
+source                         False
+destination                    False
+cab_type                       False
+product_id                     False
+name                           False
+price                           True
+distance                       False
+surge_multiplier               False
+latitude                       False
+longitude                      False
+temperature                    False
+apparentTemperature            False
+short_summary                  False
+long_summary                   False
+precipIntensity                False
+precipProbability              False
+humidity                       False
+windSpeed                      False
+windGust                       False
+windGustTime                   False
+visibility                     False
+temperatureHigh                False
+temperatureHighTime            False
+temperatureLow                 False
+temperatureLowTime             False
+apparentTemperatureHigh        False
+apparentTemperatureHighTime    False
+apparentTemperatureLow         False
+apparentTemperatureLowTime     False
+icon                           False
+dewPoint                       False
+pressure                       False
+windBearing                    False
+cloudCover                     False
+uvIndex                        False
+visibility.1                   False
+ozone                          False
+sunriseTime                    False
+sunsetTime                     False
+moonPhase                      False
+precipIntensityMax             False
+uvIndexTime                    False
+temperatureMin                 False
+temperatureMinTime             False
+temperatureMax                 False
+temperatureMaxTime             False
+apparentTemperatureMin         False
+apparentTemperatureMinTime     False
+apparentTemperatureMax         False
+apparentTemperatureMaxTime     False
+dtype: bool
+Number of missing price values: 55095
+Number of records: 693071
+Percent missing price: 0.07949402009317949
+id                             False
+timestamp                      False
+hour                           False
+day                            False
+month                          False
+datetime                       False
+timezone                       False
+source                         False
+destination                    False
+cab_type                       False
+product_id                     False
+name                           False
+price                          False
+distance                       False
+surge_multiplier               False
+latitude                       False
+longitude                      False
+temperature                    False
+apparentTemperature            False
+short_summary                  False
+long_summary                   False
+precipIntensity                False
+precipProbability              False
+humidity                       False
+windSpeed                      False
+windGust                       False
+windGustTime                   False
+visibility                     False
+temperatureHigh                False
+temperatureHighTime            False
+temperatureLow                 False
+temperatureLowTime             False
+apparentTemperatureHigh        False
+apparentTemperatureHighTime    False
+apparentTemperatureLow         False
+apparentTemperatureLowTime     False
+icon                           False
+dewPoint                       False
+pressure                       False
+windBearing                    False
+cloudCover                     False
+uvIndex                        False
+visibility.1                   False
+ozone                          False
+sunriseTime                    False
+sunsetTime                     False
+moonPhase                      False
+precipIntensityMax             False
+uvIndexTime                    False
+temperatureMin                 False
+temperatureMinTime             False
+temperatureMax                 False
+temperatureMaxTime             False
+apparentTemperatureMin         False
+apparentTemperatureMinTime     False
+apparentTemperatureMax         False
+apparentTemperatureMaxTime     False
+dtype: bool
+END RIDESHARE CLEANING
+________________________________________________________________
+
+________________________________________________________________
+
+CLEANING RENT DATA:
+['Back Bay', 'Beacon Hill', 'Boston University', 'Fenway', 'Financial District', 'Haymarket Square', 'North End', 'North Station', 'Northeastern University', 'South Station', 'Theatre District', 'West End']
+['Back Bay', 'Beacon Hill', 'Boston University', 'Fenway', 'Financial District', 'Haymarket Square', 'North End', 'North Station', 'Northeastern University', 'South Station', 'Theatre District', 'West End']
+['Allston - Brighton', 'Back Bay', 'Bay Village', 'Beacon Hill', 'Charlestown', 'Chinatown - Leather District', 'Dorchester', 'Downtown - Financial District', 'East Boston', 'Fenway - Kenmore', 'Hyde Park', 'Jamaica Plain', 'Mattapan', 'Mission Hill', 'North End Boston', 'Roslindale', 'Roxbury', 'South Boston', 'South End Boston', 'West End Boston', 'West Roxbury']
+END RENT CLEANING
+________________________________________________________________
+
+________________________________________________________________
+
+PRELIMINARY EXPLORATION:
+        price            source    destination cab_type
+0         5.0  Haymarket Square  North Station     Lyft
+1        11.0  Haymarket Square  North Station     Lyft
+2         7.0  Haymarket Square  North Station     Lyft
+3        26.0  Haymarket Square  North Station     Lyft
+4         9.0  Haymarket Square  North Station     Lyft
+      ...               ...            ...      ...
+637971    9.5          West End      North End     Uber
+637972   13.0          West End      North End     Uber
+637973    9.5          West End      North End     Uber
+637974   27.0          West End      North End     Uber
+637975   10.0          West End      North End     Uber
+
+[637976 rows x 4 columns]
+Index(['hour', 'day', 'month', 'datetime', 'timezone', 'source', 'destination',
+       'cab_type', 'name', 'price', 'distance', 'surge_multiplier', 'latitude',
+       'longitude', 'temperature', 'apparentTemperature', 'short_summary',
+       'long_summary', 'precipIntensity', 'precipProbability', 'humidity',
+       'windSpeed', 'windGust', 'windGustTime', 'visibility',
+       'temperatureHigh', 'temperatureHighTime', 'temperatureLow',
+       'temperatureLowTime', 'apparentTemperatureHigh',
+       'apparentTemperatureHighTime', 'apparentTemperatureLow',
+       'apparentTemperatureLowTime', 'icon', 'dewPoint', 'pressure',
+       'windBearing', 'cloudCover', 'uvIndex', 'visibility.1', 'ozone',
+       'sunriseTime', 'sunsetTime', 'moonPhase', 'precipIntensityMax',
+       'uvIndexTime', 'temperatureMin', 'temperatureMinTime', 'temperatureMax',
+       'temperatureMaxTime', 'apparentTemperatureMin',
+       'apparentTemperatureMinTime', 'apparentTemperatureMax',
+       'apparentTemperatureMaxTime', 'is_uber', 'price_dist_ratio',
+       'source_rent', 'destination_rent'],
+      dtype='object')
+          short_summary                                       long_summary
+0        Mostly Cloudy                           Rain throughout the day. 
+1                 Rain    Rain until morning, starting again in the eve...
+2                Clear                         Light rain in the morning. 
+3                Clear                  Partly cloudy throughout the day. 
+4        Partly Cloudy                  Mostly cloudy throughout the day. 
+                ...                                                ...
+637971   Partly Cloudy           Light rain in the morning and overnight. 
+637972   Partly Cloudy           Light rain in the morning and overnight. 
+637973   Partly Cloudy           Light rain in the morning and overnight. 
+637974   Partly Cloudy           Light rain in the morning and overnight. 
+637975   Partly Cloudy           Light rain in the morning and overnight. 
+
+[637976 rows x 2 columns]
+ Overcast             201429
+ Mostly Cloudy        134603
+ Partly Cloudy        117226
+ Clear                 80256
+ Light Rain            50488
+ Rain                  21781
+ Possible Drizzle      17176
+ Foggy                  8292
+ Drizzle                6725
+Name: short_summary, dtype: int64
+END PRELIMINARY EXPLORATION
+________________________________________________________________
+
+________________________________________________________________
+
+VALUE COUNT EXPLORATION:
+0     29872
+23    29355
+17    28075
+12    28017
+13    27977
+14    27976
+16    27972
+18    27958
+11    27946
+10    27918
+15    27868
+22    27093
+9     26673
+2     26323
+1     26310
+4     26125
+21    25549
+3     25530
+19    25410
+6     25147
+20    24620
+5     22995
+7     22930
+8     22337
+Name: hour, dtype: int64
+27    70135
+28    67842
+29    55222
+1     41680
+30    41544
+16    41359
+17    41354
+14    41344
+15    41332
+3     41323
+2     41298
+13    35496
+18    33329
+26    29028
+4     11627
+10     2534
+9      1529
+Name: day, dtype: int64
+12    374205
+11    263771
+Name: month, dtype: int64
+2018-11-26 23:33:14    151
+2018-11-29 02:29:08    149
+2018-11-29 04:38:08    146
+2018-11-27 00:03:14    146
+2018-11-29 02:47:08    146
+
+2018-11-28 09:32:17      3
+2018-11-29 14:27:58      3
+2018-12-14 11:50:07      3
+2018-11-30 13:17:58      1
+2018-12-13 15:10:13      1
+Name: datetime, Length: 31350, dtype: int64
+America/New_York    637976
+Name: timezone, dtype: int64
+Financial District         54197
+Theatre District           53201
+Back Bay                   53201
+Boston University          53172
+North End                  53171
+Fenway                     53166
+Northeastern University    53164
+South Station              53160
+Haymarket Square           53147
+West End                   52980
+Beacon Hill                52841
+North Station              52576
+Name: source, dtype: int64
+Financial District         54192
+Back Bay                   53190
+Theatre District           53189
+Haymarket Square           53171
+Boston University          53171
+Fenway                     53166
+Northeastern University    53165
+North End                  53164
+South Station              53159
+West End                   52992
+Beacon Hill                52840
+North Station              52577
+Name: destination, dtype: int64
+Uber    330568
+Lyft    307408
+Name: cab_type, dtype: int64
+UberXL          55096
+WAV             55096
+Black SUV       55096
+Black           55095
+UberX           55094
+UberPool        55091
+Lux Black       51235
+Lyft            51235
+Lyft XL         51235
+Lux Black XL    51235
+Lux             51235
+Shared          51233
+Name: name, dtype: int64
+7.00     52314
+16.50    44351
+10.50    40590
+13.50    33707
+9.00     30884
+ 
+11.60        1
+64.50        1
+8.35         1
+10.60        1
+63.00        1
+Name: price, Length: 147, dtype: int64
+2.66    8010
+2.32    7998
+2.84    7560
+1.41    6846
+1.25    6726
+
+4.85       6
+6.03       6
+7.62       6
+6.14       6
+4.87       6
+Name: distance, Length: 549, dtype: int64
+1.00    617001
+1.25     11085
+1.50      5065
+1.75      2420
+2.00      2239
+2.50       154
+3.00        12
+Name: surge_multiplier, dtype: int64
+42.3519    103156
+42.3647     90822
+42.3661     87652
+42.2148     81570
+42.3503     56306
+42.3505     50389
+42.3644     39052
+42.3429     38835
+42.3588     38690
+42.3398     27325
+42.3559     24179
+Name: latitude, dtype: int64
+-71.0542    90822
+-71.0631    87652
+-71.0330    81570
+-71.0643    56336
+-71.0810    56306
+-71.1054    50389
+-71.0551    46820
+-71.0661    39052
+-71.1003    38835
+-71.0707    38690
+-71.0892    27325
+-71.0550    24179
+Name: longitude, dtype: int64
+37.92    6033
+39.41    5182
+40.13    5177
+38.42    5032
+39.35    4881
+
+41.52     390
+35.22     338
+41.59     233
+34.51     146
+29.35     141
+Name: temperature, Length: 308, dtype: int64
+33.81    5182
+32.45    5032
+33.00    4881
+35.66    4869
+37.54    4624
+
+41.52     390
+30.73     338
+41.59     233
+30.41     146
+24.16     141
+Name: apparentTemperature, Length: 319, dtype: int64
+ Overcast             201429
+ Mostly Cloudy        134603
+ Partly Cloudy        117226
+ Clear                 80256
+ Light Rain            50488
+ Rain                  21781
+ Possible Drizzle      17176
+ Foggy                  8292
+ Drizzle                6725
+Name: short_summary, dtype: int64
+ Mostly cloudy throughout the day.                      186262
+ Partly cloudy throughout the day.                      133744
+ Light rain in the morning.                              94423
+ Rain throughout the day.                                49929
+ Light rain in the morning and overnight.                46575
+ Rain until morning, starting again in the evening.      44071
+ Foggy in the morning.                                   41201
+ Light rain until evening.                               32690
+ Overcast throughout the day.                             6906
+ Possible drizzle in the morning.                         1708
+ Rain in the morning and afternoon.                        467
+Name: long_summary, dtype: int64
+0.0000    499228
+0.0020      5196
+0.0005      4980
+0.1058      3743
+0.0013      3414
+ 
+0.0701      1696
+0.0010      1561
+0.0053      1548
+0.0006      1547
+0.0074      1542
+Name: precipIntensity, Length: 63, dtype: int64
+0.00    499228
+1.00     65960
+0.29      5013
+0.03      5010
+0.94      4602
+0.32      4584
+0.59      3463
+0.74      3460
+0.14      3419
+0.12      3291
+0.10      3269
+0.09      3268
+0.11      3266
+0.61      2891
+0.15      2870
+0.42      2381
+0.18      1744
+0.46      1736
+0.47      1729
+0.85      1723
+0.17      1718
+0.56      1714
+0.66      1714
+0.16      1712
+0.02      1708
+0.99      1707
+0.07      1706
+0.57      1548
+0.86      1542
+Name: precipProbability, dtype: int64
+0.69    34092
+0.91    33595
+0.70    33556
+0.92    27523
+0.71    25864
+0.64    24362
+0.93    23799
+0.94    20977
+0.65    19951
+0.60    17921
+0.88    17703
+0.73    17280
+0.57    17091
+0.89    15383
+0.72    14833
+0.63    12951
+0.79    12231
+0.95    12061
+0.85    11993
+0.90    11868
+0.68    11498
+0.61    11462
+0.58    10946
+0.78    10946
+0.81    10483
+0.66    10367
+0.54    10347
+0.62    10342
+0.96    10339
+0.67    10326
+0.51    10306
+0.83     9715
+0.77     8619
+0.50     8611
+0.52     8605
+0.74     8585
+0.86     8264
+0.75     7651
+0.80     6913
+0.84     6703
+0.55     5639
+0.56     5340
+0.82     5192
+0.87     5164
+0.46     5149
+0.59     5057
+0.53     3459
+0.44     2873
+0.41     1745
+0.40     1712
+0.38      584
+Name: humidity, dtype: int64
+8.33    8317
+8.11    6900
+8.41    6756
+4.54    6176
+8.28    6028
+
+0.45     390
+5.15     338
+4.58     146
+4.80     141
+0.51      77
+Name: windSpeed, Length: 291, dtype: int64
+8.47     6929
+12.38    6306
+12.21    5182
+3.73     5170
+4.16     5164
+
+7.11      338
+2.03      233
+6.60      146
+6.83      141
+0.80       77
+Name: windGust, Length: 286, dtype: int64
+1543431600    73286
+1543338000    45995
+1543672800    41389
+1544846400    41378
+1545022800    41367
+1545015600    41321
+1544918400    41319
+1543755600    41298
+1544738400    41236
+1543514400    41051
+1543287600    34720
+1543856400    30830
+1543554000    29758
+1545127200    24717
+1543446000    13743
+1543860000    10371
+1543334400     9357
+1543291200     9351
+1543557600     6906
+1543597200     5147
+1544371200     4063
+1543939200     3140
+1543305600     2890
+1544634000     2876
+1543150800      467
+Name: windGustTime, dtype: int64
+10.000    153880
+9.933       8052
+9.972       7145
+9.974       6351
+9.961       6334
+ 
+4.675        616
+9.883        584
+4.159        390
+5.138        233
+1.685         77
+Name: visibility, Length: 227, dtype: int64
+42.60    25814
+42.61    25166
+44.66    13790
+42.18    13743
+42.57    13572
+ 
+35.49      822
+32.97      584
+46.28      390
+36.29      141
+46.15       77
+Name: temperatureHigh, Length: 129, dtype: int64
+1543438800    73286
+1543320000    58242
+1543600800    41811
+1543690800    41389
+1544814000    41378
+1545076800    41367
+1544896800    41319
+1544731200    41236
+1543852800    41201
+1543510800    41051
+1544990400    37893
+1543788000    37837
+1543255200    34720
+1545159600    24717
+1543420800    13743
+1543251600     9351
+1544378400     4063
+1543784400     3461
+1544968800     3428
+1544637600     2876
+1543942800     1713
+1543939200     1427
+1543154400      467
+Name: temperatureHighTime, dtype: int64
+37.60    18829
+37.44    13767
+36.71    13743
+41.90    13492
+37.33    12047
+ 
+20.95      584
+40.21      390
+37.27      146
+21.52      141
+40.15       77
+Name: temperatureLow, Length: 133, dtype: int64
+1543489200    52737
+1543399200    48885
+1543298400    44071
+1543712400    41389
+1544954400    41319
+1543921200    41201
+1545044400    37893
+1543816800    32690
+1543579200    32495
+1544781600    31023
+1543658400    26300
+1545220800    24717
+1544835600    24142
+1545138000    22407
+1544832000    17236
+1545134400    13774
+1543478400    13743
+1543485600    12943
+1543662000    12053
+1544788800    10213
+1543402800     9357
+1543824000     8608
+1543575600     8556
+1543464000     7606
+1545130800     5186
+1544443200     4063
+1543665600     3458
+1545048000     3428
+1544007600     3140
+1544688000     2876
+1543233600      467
+Name: temperatureLowTime, dtype: int64
+36.57    18829
+43.84    16952
+43.85    16722
+32.95    13788
+35.95    13783
+ 
+22.90      584
+43.21      390
+36.54      146
+30.25      141
+43.17       77
+Name: apparentTemperatureHigh, Length: 124, dtype: int64
+1543438800    61093
+1543320000    58242
+1543690800    41389
+1544817600    41378
+1544896800    41319
+1543852800    41201
+1543510800    41051
+1544986800    37893
+1543788000    37837
+1545076800    36181
+1544734800    34486
+1543611600    28033
+1545159600    24717
+1543251600    22947
+1543244400    21124
+1543420800    13743
+1543435200    12193
+1543608000     6906
+1543600800     6872
+1544731200     6750
+1545080400     5186
+1544378400     4063
+1543784400     3461
+1544968800     3428
+1543946400     3140
+1544637600     2876
+1543186800      467
+Name: apparentTemperatureHighTime, dtype: int64
+32.12    18829
+31.97    13767
+30.29    13743
+36.70    13492
+31.82    12047
+ 
+14.26      584
+39.27      390
+31.79      146
+19.19      141
+39.21       77
+Name: apparentTemperatureLow, Length: 136, dtype: int64
+1543478400    65680
+1543399200    48885
+1543712400    41389
+1544835600    41378
+1545134400    41367
+1545044400    41321
+1543914000    41201
+1543298400    34720
+1543816800    32690
+1543658400    29758
+1544785200    24151
+1543460400    21349
+1544954400    20636
+1543575600    18115
+1544950800    17244
+1545199200    15512
+1543662000    12053
+1543568400    10850
+1543579200    10360
+1544788800    10213
+1543392000     9357
+1543291200     9351
+1545195600     9205
+1543824000     8608
+1544781600     6872
+1544947200     3439
+1544007600     3140
+1544688000     2876
+1544443200     2393
+1543557600     1726
+1544439600     1670
+1543233600      467
+Name: apparentTemperatureLowTime, dtype: int64
+ cloudy                  201429
+ partly-cloudy-night     145492
+ partly-cloudy-day       106337
+ rain                     96170
+ clear-night              55577
+ clear-day                24679
+ fog                       8292
+Name: icon, dtype: int64
+28.39    8049
+30.16    6895
+30.30    5032
+28.36    5013
+29.86    4881
+
+29.31     338
+39.64     233
+29.15     146
+15.46     141
+39.62      77
+Name: dewPoint, Length: 313, dtype: int64
+996.21     5182
+996.92     5032
+991.46     4926
+995.30     4881
+994.99     4611
+
+1014.06     390
+1014.18     233
+991.23      146
+1021.33     141
+1014.10      77
+Name: pressure, Length: 316, dtype: int64
+303    17187
+295    14210
+297    14194
+313    11922
+294    10354
+ 
+19      1538
+110     1462
+91       616
+248      338
+88       233
+Name: windBearing, Length: 195, dtype: int64
+1.00    246511
+0.00     36451
+0.81     17821
+0.77     14797
+0.99     13200
+ 
+0.66      1705
+0.56      1704
+0.09      1703
+0.10      1702
+0.40      1699
+Name: cloudCover, Length: 83, dtype: int64
+0    491206
+1    134664
+2     12106
+Name: uvIndex, dtype: int64
+10.000    153880
+9.933       8052
+9.972       7145
+9.974       6351
+9.961       6334
+ 
+4.675        616
+9.883        584
+4.159        390
+5.138        233
+1.685         77
+Name: visibility.1, Length: 227, dtype: int64
+290.3    8026
+355.0    7883
+291.1    6348
+296.0    5215
+299.7    5197
+
+346.0     563
+313.0     390
+338.1     338
+301.9     233
+306.6     141
+Name: ozone, Length: 274, dtype: int64
+1543405938    21715
+1543405936    18975
+1543233003    18122
+1544875681    17225
+1544702792    15529
+ 
+1544356962      822
+1545134992      584
+1543146535      390
+1544357003      141
+1543146539       77
+Name: sunriseTime, Length: 110, dtype: int64
+1543439719    19995
+1543439716    18829
+1543439718    13767
+1543439738    13743
+1543266973    13492
+ 
+1544649206     1161
+1544390002      822
+1543180615      390
+1544389993      141
+1543180617       77
+Name: sunsetTime, Length: 114, dtype: int64
+0.72    87029
+0.68    58242
+0.64    44071
+0.79    41811
+0.82    41389
+0.24    41378
+0.33    41367
+0.30    41321
+0.27    41319
+0.86    41298
+0.21    41236
+0.89    41201
+0.75    41051
+0.37    24717
+0.09     4063
+0.93     3140
+0.18     2876
+0.60      467
+Name: moonPhase, dtype: int64
+0.0000    210026
+0.0001     54979
+0.0004     41613
+0.0003     19571
+0.1430     17207
+ 
+0.1361      1541
+0.1215      1540
+0.1217      1462
+0.1459       390
+0.1396        77
+Name: precipIntensityMax, Length: 65, dtype: int64
+1543420800    87029
+1543338000    58242
+1543251600    44071
+1543593600    41811
+1543683600    41389
+1544806800    41378
+1545066000    41367
+1544979600    41321
+1544893200    41319
+1543770000    41298
+1543852800    41201
+1544716800    34486
+1543510800    34145
+1545152400    24717
+1543507200     6906
+1544720400     6750
+1544374800     4063
+1543942800     3140
+1544634000     2876
+1543161600      467
+Name: uvIndexTime, dtype: int64
+33.70    19995
+33.85    18829
+36.34    17211
+33.75    13767
+33.10    13743
+ 
+16.01      822
+23.11      584
+40.73      390
+33.65      146
+15.63      141
+Name: temperatureMin, Length: 131, dtype: int64
+1543399200    73286
+1543377600    58242
+1543233600    44071
+1544929200    41319
+1543726800    41298
+1544688000    41236
+1543896000    41201
+1543550400    41051
+1544954400    37893
+1545044400    36181
+1543579200    32888
+1543658400    25861
+1545192000    24717
+1544788800    20701
+1544781600    20677
+1543402800    13743
+1543662000    10357
+1543575600     8923
+1545048000     5186
+1543665600     5171
+1544353200     4063
+1545012000     3428
+1543982400     3140
+1544673600     2876
+1543122000      467
+Name: temperatureMinTime, dtype: int64
+42.60    25814
+42.61    25166
+44.66    13790
+42.18    13743
+42.57    13572
+ 
+35.49      822
+37.99      584
+46.28      390
+36.29      141
+46.15       77
+Name: temperatureMax, Length: 128, dtype: int64
+1543438800    73286
+1543320000    58242
+1543600800    41811
+1543690800    41389
+1544814000    41378
+1544896800    41319
+1544731200    41236
+1543852800    41201
+1543510800    41051
+1544990400    37893
+1543788000    37837
+1545076800    36181
+1543255200    34720
+1545109200    24717
+1543420800    13743
+1543251600     9351
+1545022800     5186
+1544378400     4063
+1543784400     3461
+1544968800     3428
+1543899600     3140
+1544637600     2876
+1543154400      467
+Name: temperatureMaxTime, dtype: int64
+30.03    18829
+29.97    13767
+29.11    13743
+37.17    13492
+29.88    12193
+ 
+17.83     1161
+12.21      822
+38.28      390
+13.91      141
+38.23       77
+Name: apparentTemperatureMin, Length: 137, dtype: int64
+1543399200    73286
+1543377600    58242
+1543291200    44071
+1545044400    41367
+1544929200    41319
+1544688000    41236
+1543896000    41201
+1543550400    41051
+1545019200    37893
+1543748400    32690
+1543658400    31032
+1545134400    24717
+1543575600    22558
+1544788800    20701
+1544785200    15489
+1543392000    13743
+1543662000    10357
+1543568400     8923
+1543744800     8608
+1543579200     8605
+1544781600     5188
+1545012000     3428
+1543982400     3140
+1544673600     2876
+1543557600     1725
+1544356800     1670
+1544346000     1571
+1544342400      822
+1543136400      467
+Name: apparentTemperatureMinTime, dtype: int64
+36.57    18829
+43.84    16952
+43.85    16722
+32.95    13788
+35.95    13783
+ 
+31.84      584
+43.21      390
+36.54      146
+30.25      141
+43.17       77
+Name: apparentTemperatureMax, Length: 125, dtype: int64
+1543438800    61093
+1543320000    58242
+1543690800    41389
+1544817600    41378
+1544896800    41319
+1543852800    41201
+1543510800    41051
+1544986800    37893
+1543788000    37837
+1545076800    36181
+1544734800    34486
+1543611600    28033
+1545109200    24717
+1543251600    22947
+1543244400    21124
+1543420800    13743
+1543435200    12193
+1543608000     6906
+1543600800     6872
+1544731200     6750
+1545080400     5186
+1544378400     4063
+1543784400     3461
+1544958000     3428
+1543899600     3140
+1544637600     2876
+1543186800      467
+Name: apparentTemperatureMaxTime, dtype: int64
+1    330568
+0    307408
+Name: is_uber, dtype: int64
+5.555556     2139
+10.000000    1886
+5.000000     1864
+11.111111    1733
+3.571429     1647
+
+33.152174       1
+19.975186       1
+13.310185       1
+4.074890        1
+64.150943       1
+Name: price_dist_ratio, Length: 14860, dtype: int64
+3937    159502
+4255    107357
+4323     53201
+4526     53201
+4551     53171
+4066     53147
+4028     52980
+3922     52841
+4289     52576
+Name: source_rent, dtype: int64
+3937    159502
+4255    107351
+4323     53190
+4526     53189
+4066     53171
+4551     53164
+4028     52992
+3922     52840
+4289     52577
+Name: destination_rent, dtype: int64
+END VALUE COUNT EXPLORATION
+________________________________________________________________
+
+________________________________________________________________
+
+NAME EXPLORATION:
+                          0
+name         is_uber       
+Black SUV    1        55096
+UberXL       1        55096
+WAV          1        55096
+Black        1        55095
+UberX        1        55094
+UberPool     1        55091
+Lux          0        51235
+Lux Black    0        51235
+Lux Black XL 0        51235
+Lyft         0        51235
+Lyft XL      0        51235
+Shared       0        51233
+END NAME EXPLORATION
+________________________________________________________________
+
+________________________________________________________________
+
+AVERAGE PRICE BY NAME:
+Uber:
+name
+Black        20.523786
+Black SUV    30.286763
+UberPool      8.752500
+UberX         9.765074
+UberXL       15.678144
+WAV           9.765019
+Name: price, dtype: float64
+Lyft:
+name
+Lux             17.771240
+Lux Black       23.062468
+Lux Black XL    32.324086
+Lyft             9.610885
+Lyft XL         15.309363
+Shared           6.029893
+Name: price, dtype: float64
+END AVERAGE PRICE BY NAME
+________________________________________________________________
+
+________________________________________________________________
+
+TOTAL PRICE (REVENUE) BY NAME:
+Uber:
+name
+Black        1130758.0
+Black SUV    1668679.5
+UberPool      482184.0
+UberX         537997.0
+UberXL        863803.0
+WAV           538013.5
+Name: price, dtype: float64
+Lyft:
+name
+Lux              910509.50
+Lux Black       1181605.55
+Lux Black XL    1656124.55
+Lyft             492413.68
+Lyft XL          784375.20
+Shared           308929.50
+Name: price, dtype: float64
+END TOTAL PRICE (REVENUE) BY NAME
+________________________________________________________________
+
+________________________________________________________________
+
+AVERAGE PRICE BY WEATHER:
+Overall:
+short_summary
+ Clear                16.486460
+ Drizzle              16.501784
+ Foggy                16.540883
+ Light Rain           16.561282
+ Mostly Cloudy        16.594419
+ Overcast             16.535116
+ Partly Cloudy        16.552009
+ Possible Drizzle     16.481390
+ Rain                 16.539987
+Name: price, dtype: float64
+Uber:
+short_summary
+ Clear                15.717256
+ Drizzle              15.774903
+ Foggy                15.640326
+ Light Rain           15.841686
+ Mostly Cloudy        15.842580
+ Overcast             15.798112
+ Partly Cloudy        15.773583
+ Possible Drizzle     15.808930
+ Rain                 15.828894
+Name: price, dtype: float64
+Lyft:
+short_summary
+ Clear                17.314370
+ Drizzle              17.346191
+ Foggy                17.506247
+ Light Rain           17.335067
+ Mostly Cloudy        17.406237
+ Overcast             17.322030
+ Partly Cloudy        17.384013
+ Possible Drizzle     17.239823
+ Rain                 17.312022
+Name: price, dtype: float64
+END AVERAGE PRICE BY WEATHER
+________________________________________________________________
+
+________________________________________________________________
+
+AVERAGE DISTANCE BY WEATHER:
+Overall:
+short_summary
+ Clear                2.185388
+ Drizzle              2.175958
+ Foggy                2.161761
+ Light Rain           2.193693
+ Mostly Cloudy        2.194945
+ Overcast             2.186401
+ Partly Cloudy        2.191447
+ Possible Drizzle     2.194799
+ Rain                 2.183036
+Name: distance, dtype: float64
+Uber:
+short_summary
+ Clear                2.191428
+ Drizzle              2.174422
+ Foggy                2.124727
+ Light Rain           2.202121
+ Mostly Cloudy        2.193682
+ Overcast             2.193452
+ Partly Cloudy        2.187334
+ Possible Drizzle     2.202111
+ Rain                 2.177034
+Name: distance, dtype: float64
+Lyft:
+short_summary
+ Clear                2.178886
+ Drizzle              2.177743
+ Foggy                2.201459
+ Light Rain           2.184631
+ Mostly Cloudy        2.196309
+ Overcast             2.178872
+ Partly Cloudy        2.195842
+ Possible Drizzle     2.186551
+ Rain                 2.189552
+Name: distance, dtype: float64
+END AVERAGE DISTANCE BY WEATHER
+________________________________________________________________
+
+________________________________________________________________
+
+AVERAGE PRICE BY HOUR:
+Overall:
+hour
+0     16.574769
+1     16.513778
+2     16.561803
+3     16.539718
+4     16.579311
+5     16.537217
+6     16.519326
+7     16.491627
+8     16.603326
+9     16.512578
+10    16.501021
+11    16.558506
+12    16.485527
+13    16.549744
+14    16.549882
+15    16.524813
+16    16.513991
+17    16.607996
+18    16.516847
+19    16.552437
+20    16.599208
+21    16.604323
+22    16.595357
+23    16.501090
+Name: price, dtype: float64
+Uber:
+hour
+0     15.731581
+1     15.773330
+2     15.866751
+3     15.793138
+4     15.856713
+5     15.787669
+6     15.830117
+7     15.728372
+8     15.868050
+9     15.806740
+10    15.763140
+11    15.694353
+12    15.688786
+13    15.799468
+14    15.812338
+15    15.772869
+16    15.740375
+17    15.860779
+18    15.853099
+19    15.751525
+20    15.881984
+21    15.907874
+22    15.783186
+23    15.767768
+Name: price, dtype: float64
+Lyft:
+hour
+0     17.450058
+1     17.311035
+2     17.324821
+3     17.352381
+4     17.366701
+5     17.332792
+6     17.282279
+7     17.315947
+8     17.402991
+9     17.260774
+10    17.309118
+11    17.500337
+12    17.326157
+13    17.353973
+14    17.363032
+15    17.337390
+16    17.361439
+17    17.375117
+18    17.237541
+19    17.384715
+20    17.389287
+21    17.333642
+22    17.444252
+23    17.304949
+Name: price, dtype: float64
+END AVERAGE PRICE BY HOUR
+________________________________________________________________
+
+________________________________________________________________
+
+AVERAGE PRICE DISTANCE RATIO BY HOUR:
+Overall:
+hour
+0     9.726170
+1     9.663340
+2     9.688609
+3     9.635379
+4     9.628231
+5     9.889194
+6     9.810561
+7     9.550098
+8     9.699164
+9     9.560897
+10    9.652740
+11    9.886808
+12    9.573400
+13    9.625770
+14    9.663743
+15    9.563276
+16    9.907325
+17    9.537534
+18    9.925654
+19    9.670207
+20    9.586864
+21    9.771447
+22    9.620382
+23    9.667759
+Name: price_dist_ratio, dtype: float64
+Uber:
+hour
+0      9.711870
+1      9.618282
+2      9.573016
+3      9.588790
+4      9.537024
+5     10.074914
+6      9.977167
+7      9.358034
+8      9.739003
+9      9.438594
+10     9.652516
+11    10.034260
+12     9.440180
+13     9.442900
+14     9.702842
+15     9.484228
+16    10.052587
+17     9.418015
+18    10.228026
+19     9.691791
+20     9.590946
+21    10.004751
+22     9.560972
+23     9.682856
+Name: price_dist_ratio, dtype: float64
+Lyft:
+hour
+0     9.741014
+1     9.711855
+2     9.815506
+3     9.686091
+4     9.727616
+5     9.692070
+6     9.626128
+7     9.757530
+8     9.655837
+9     9.690538
+10    9.652984
+11    9.726101
+12    9.713958
+13    9.821790
+14    9.620636
+15    9.648698
+16    9.748200
+17    9.660237
+18    9.597340
+19    9.647777
+20    9.582368
+21    9.527131
+22    9.682479
+23    9.651210
+Name: price_dist_ratio, dtype: float64
+END AVERAGE PRICE DISTANCE RATIO BY HOUR
+________________________________________________________________
+
+________________________________________________________________
+
+AVERAGE SURGE MULTIPLIER BY HOUR:
+Lyft:
+hour
+0     1.031487
+1     1.031810
+2     1.032834
+3     1.030984
+4     1.030355
+5     1.030659
+6     1.030582
+7     1.029005
+8     1.031121
+9     1.032129
+10    1.029043
+11    1.032867
+12    1.030606
+13    1.038288
+14    1.031264
+15    1.030909
+16    1.028747
+17    1.030030
+18    1.031315
+19    1.028529
+20    1.033483
+21    1.031751
+22    1.032347
+23    1.029956
+Name: surge_multiplier, dtype: float64
+END AVERAGE SURGE MULTIPLIER BY HOUR
+________________________________________________________________
+
+________________________________________________________________
+
+AVERAGE RENT BY NEIGHBORHOOD:
+                         average_rent
+neighborhood                         
+Back Bay                         4323
+Beacon Hill                      3922
+Boston University                3937
+Fenway                           3937
+Financial District               4255
+Haymarket Square                 4066
+North End                        4551
+North Station                    4289
+Northeastern University          3937
+South Station                    4255
+Theatre District                 4526
+West End                         4028
+<Figure size 432x288 with 0 Axes>
+END AVERAGE RENT BY NEIGHBORHOOD
+________________________________________________________________
+
+________________________________________________________________
+
+PRICE MAP
+latitude  longitude
+42.3647   -71.0542     90822
+42.3661   -71.0631     87652
+42.2148   -71.0330     81570
+42.3519   -71.0643     56336
+42.3503   -71.0810     56306
+42.3505   -71.1054     50389
+42.3519   -71.0551     46820
+42.3644   -71.0661     39052
+42.3429   -71.1003     38835
+42.3588   -71.0707     38690
+42.3398   -71.0892     27325
+42.3559   -71.0550     24179
+dtype: int64
+END PRICE MAP
+________________________________________________________________
+
+________________________________________________________________
+
+AVERAGE PRICE AND RENT BY NEIGHBORHOOD
+                         avg_source_price  ...  avg_rent_thousands
+source                                     ...                    
+Back Bay                        16.047394  ...               4.323
+Beacon Hill                     15.664030  ...               3.922
+Boston University               18.853034  ...               3.937
+Fenway                          18.379491  ...               3.937
+Financial District              18.181372  ...               4.255
+Haymarket Square                13.578114  ...               4.066
+North End                       15.153373  ...               4.551
+North Station                   16.364006  ...               4.289
+Northeastern University         17.901124  ...               3.937
+South Station                   15.672479  ...               4.255
+Theatre District                16.596994  ...               4.526
+West End                        16.108498  ...               4.028
+
+[12 rows x 3 columns]
+                       avg_source_price  avg_destination_price  avg_rent_thousands
+avg_source_price               1.000000               0.955817           -0.318912
+avg_destination_price          0.955817               1.000000           -0.461848
+avg_rent_thousands            -0.318912              -0.461848            1.000000
+<Figure size 432x288 with 0 Axes>
+END AVERAGE PRICE AND RENT BY NEIGHBORHOOD
+________________________________________________________________
+
+________________________________________________________________
+
+OVERALL CORRELATION MATRIX
+           variable  correlation relationship
+0          distance     0.345061       direct
+1  surge_multiplier     0.240458       direct
+2           is_uber     0.083385      inverse
+3  destination_rent     0.069239      inverse
+4       source_rent     0.050271      inverse
+END OVERALL CORRELATION MATRIX
+________________________________________________________________
+
+________________________________________________________________
+
+UBER CORRELATION MATRIX
+           variable  correlation relationship
+0          distance     0.336204       direct
+1  destination_rent     0.063119      inverse
+2       source_rent     0.051320      inverse
+3          windGust     0.004777       direct
+4         windSpeed     0.004251       direct
+END UBER CORRELATION MATRIX
+________________________________________________________________
+
+________________________________________________________________
+
+LYFT CORRELATION MATRIX
+           variable  correlation relationship
+0          distance     0.361567       direct
+1  surge_multiplier     0.308237       direct
+2  destination_rent     0.075713      inverse
+3       source_rent     0.049902      inverse
+4          pressure     0.003449       direct
+END LYFT CORRELATION MATRIX
+________________________________________________________________
+
+________________________________________________________________
+
+OVERALL LINEAR REGRESSION:
+
+Distance Model:
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                  price   R-squared:                       0.119
+Model:                            OLS   Adj. R-squared:                  0.119
+Method:                 Least Squares   F-statistic:                 8.623e+04
+Date:                Sat, 09 Dec 2023   Prob (F-statistic):               0.00
+Time:                        15:19:27   Log-Likelihood:            -2.2892e+06
+No. Observations:              637976   AIC:                         4.578e+06
+Df Residuals:                  637974   BIC:                         4.578e+06
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+Intercept     10.3413      0.024    434.527      0.000      10.295      10.388
+distance       2.8337      0.010    293.647      0.000       2.815       2.853
+==============================================================================
+Omnibus:                    68336.762   Durbin-Watson:                   2.164
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            95053.297
+Skew:                           0.855   Prob(JB):                         0.00
+Kurtosis:                       3.806   Cond. No.                         6.07
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+Surge Model:
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                  price   R-squared:                       0.058
+Model:                            OLS   Adj. R-squared:                  0.058
+Method:                 Least Squares   F-statistic:                 3.915e+04
+Date:                Sat, 09 Dec 2023   Prob (F-statistic):               0.00
+Time:                        15:19:28   Log-Likelihood:            -2.3106e+06
+No. Observations:              637976   AIC:                         4.621e+06
+Df Residuals:                  637974   BIC:                         4.621e+06
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+====================================================================================
+                       coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------------
+Intercept           -7.3058      0.121    -60.343      0.000      -7.543      -7.069
+surge_multiplier    23.4969      0.119    197.867      0.000      23.264      23.730
+==============================================================================
+Omnibus:                    59957.017   Durbin-Watson:                   2.012
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            78406.044
+Skew:                           0.851   Prob(JB):                         0.00
+Kurtosis:                       3.230   Cond. No.                         21.3
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+Cab Type Model:
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                  price   R-squared:                       0.007
+Model:                            OLS   Adj. R-squared:                  0.007
+Method:                 Least Squares   F-statistic:                     4467.
+Date:                Sat, 09 Dec 2023   Prob (F-statistic):               0.00
+Time:                        15:19:28   Log-Likelihood:            -2.3274e+06
+No. Observations:              637976   AIC:                         4.655e+06
+Df Residuals:                  637974   BIC:                         4.655e+06
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+Intercept     17.3514      0.017   1035.352      0.000      17.319      17.384
+is_uber       -1.5561      0.023    -66.835      0.000      -1.602      -1.510
+==============================================================================
+Omnibus:                    92755.975   Durbin-Watson:                   1.964
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):           146700.968
+Skew:                           1.017   Prob(JB):                         0.00
+Kurtosis:                       4.174   Cond. No.                         2.66
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+Combo Model:
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                  price   R-squared:                       0.176
+Model:                            OLS   Adj. R-squared:                  0.176
+Method:                 Least Squares   F-statistic:                 2.717e+04
+Date:                Sat, 09 Dec 2023   Prob (F-statistic):               0.00
+Time:                        15:19:28   Log-Likelihood:            -2.2680e+06
+No. Observations:              637976   AIC:                         4.536e+06
+Df Residuals:                  637970   BIC:                         4.536e+06
+Df Model:                           5                                         
+Covariance Type:            nonrobust                                         
+====================================================================================
+                       coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------------
+Intercept          -18.0333      0.339    -53.254      0.000     -18.697     -17.370
+distance             2.8514      0.010    289.508      0.000       2.832       2.871
+surge_multiplier    21.8974      0.113    194.376      0.000      21.677      22.118
+is_uber             -0.8841      0.022    -41.111      0.000      -0.926      -0.842
+source_rent          0.0010   4.96e-05     20.904      0.000       0.001       0.001
+destination_rent     0.0005      5e-05     10.770      0.000       0.000       0.001
+==============================================================================
+Omnibus:                    38890.252   Durbin-Watson:                   2.244
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            44887.766
+Skew:                           0.636   Prob(JB):                         0.00
+Kurtosis:                       2.733   Cond. No.                     1.90e+05
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+[2] The condition number is large, 1.9e+05. This might indicate that there are
+strong multicollinearity or other numerical problems.
+END OVERALL LINEAR REGRESSION
+________________________________________________________________
+
+________________________________________________________________
+
+OVERALL UBER REGRESSION:
+
+Distance Model:
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                  price   R-squared:                       0.113
+Model:                            OLS   Adj. R-squared:                  0.113
+Method:                 Least Squares   F-statistic:                 4.213e+04
+Date:                Sat, 09 Dec 2023   Prob (F-statistic):               0.00
+Time:                        15:19:30   Log-Likelihood:            -1.1590e+06
+No. Observations:              330568   AIC:                         2.318e+06
+Df Residuals:                  330566   BIC:                         2.318e+06
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+Intercept     10.4459      0.030    352.953      0.000      10.388      10.504
+distance       2.4411      0.012    205.248      0.000       2.418       2.464
+==============================================================================
+Omnibus:                    32472.874   Durbin-Watson:                   2.244
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            42513.056
+Skew:                           0.872   Prob(JB):                         0.00
+Kurtosis:                       2.784   Cond. No.                         5.93
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+Combo Model:
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                  price   R-squared:                       0.114
+Model:                            OLS   Adj. R-squared:                  0.114
+Method:                 Least Squares   F-statistic:                 1.411e+04
+Date:                Sat, 09 Dec 2023   Prob (F-statistic):               0.00
+Time:                        15:19:30   Log-Likelihood:            -1.1589e+06
+No. Observations:              330568   AIC:                         2.318e+06
+Df Residuals:                  330564   BIC:                         2.318e+06
+Df Model:                           3                                         
+Covariance Type:            nonrobust                                         
+====================================================================================
+                       coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------------
+Intercept            5.3331      0.418     12.772      0.000       4.515       6.151
+distance             2.4884      0.012    199.274      0.000       2.464       2.513
+source_rent          0.0009   6.57e-05     13.366      0.000       0.001       0.001
+destination_rent     0.0003   6.56e-05      4.926      0.000       0.000       0.000
+==============================================================================
+Omnibus:                    32456.800   Durbin-Watson:                   2.244
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            42457.066
+Skew:                           0.871   Prob(JB):                         0.00
+Kurtosis:                       2.781   Cond. No.                     1.76e+05
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+[2] The condition number is large, 1.76e+05. This might indicate that there are
+strong multicollinearity or other numerical problems.
+C:\Users\samth\Desktop\mis_541_group_project\main.py:785: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  uber_frame['predicted_price'] = combo_model.predict(uber_frame[['distance', 'source_rent', 'destination_rent']])
+END OVERALL UBER REGRESSION
+________________________________________________________________
+
+________________________________________________________________
+
+LYFT LINEAR REGRESSION:
+
+Distance Model:
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                  price   R-squared:                       0.131
+Model:                            OLS   Adj. R-squared:                  0.131
+Method:                 Least Squares   F-statistic:                 4.623e+04
+Date:                Sat, 09 Dec 2023   Prob (F-statistic):               0.00
+Time:                        15:19:31   Log-Likelihood:            -1.1231e+06
+No. Observations:              307408   AIC:                         2.246e+06
+Df Residuals:                  307406   BIC:                         2.246e+06
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+Intercept     10.0604      0.038    265.697      0.000       9.986      10.135
+distance       3.3338      0.016    215.014      0.000       3.303       3.364
+==============================================================================
+Omnibus:                    31273.875   Durbin-Watson:                   2.135
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            47458.504
+Skew:                           0.767   Prob(JB):                         0.00
+Kurtosis:                       4.163   Cond. No.                         6.25
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+Surge Model:
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                  price   R-squared:                       0.095
+Model:                            OLS   Adj. R-squared:                  0.095
+Method:                 Least Squares   F-statistic:                 3.227e+04
+Date:                Sat, 09 Dec 2023   Prob (F-statistic):               0.00
+Time:                        15:19:31   Log-Likelihood:            -1.1293e+06
+No. Observations:              307408   AIC:                         2.259e+06
+Df Residuals:                  307406   BIC:                         2.259e+06
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+====================================================================================
+                       coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------------
+Intercept           -6.1340      0.132    -46.520      0.000      -6.392      -5.876
+surge_multiplier    22.7733      0.127    179.647      0.000      22.525      23.022
+==============================================================================
+Omnibus:                    19474.687   Durbin-Watson:                   1.997
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            23456.344
+Skew:                           0.676   Prob(JB):                         0.00
+Kurtosis:                       3.049   Cond. No.                         15.3
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+Combo Model:
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                  price   R-squared:                       0.218
+Model:                            OLS   Adj. R-squared:                  0.218
+Method:                 Least Squares   F-statistic:                 2.144e+04
+Date:                Sat, 09 Dec 2023   Prob (F-statistic):               0.00
+Time:                        15:19:31   Log-Likelihood:            -1.1068e+06
+No. Observations:              307408   AIC:                         2.214e+06
+Df Residuals:                  307403   BIC:                         2.214e+06
+Df Model:                           4                                         
+Covariance Type:            nonrobust                                         
+====================================================================================
+                       coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------------
+Intercept          -21.3797      0.498    -42.936      0.000     -22.356     -20.404
+distance             3.3223      0.016    212.691      0.000       3.292       3.353
+surge_multiplier    21.7520      0.118    184.417      0.000      21.521      21.983
+source_rent          0.0012   7.47e-05     16.178      0.000       0.001       0.001
+destination_rent     0.0010    7.6e-05     12.612      0.000       0.001       0.001
+==============================================================================
+Omnibus:                    11071.623   Durbin-Watson:                   2.255
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            11192.042
+Skew:                           0.436   Prob(JB):                         0.00
+Kurtosis:                       2.662   Cond. No.                     1.84e+05
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+[2] The condition number is large, 1.84e+05. This might indicate that there are
+strong multicollinearity or other numerical problems.
+C:\Users\samth\Desktop\mis_541_group_project\main.py:823: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  lyft_frame['predicted_price'] = combo_model.predict(lyft_frame[['distance', 'surge_multiplier', 'source_rent', 'destination_rent']])
+END LYFT LINEAR REGRESSION
+________________________________________________________________
+
+Exiting...
