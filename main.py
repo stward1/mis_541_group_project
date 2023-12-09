@@ -8,9 +8,18 @@ Sections:
     0. IMPORTS
         * Importing packages needed for program functionality
     1. LOADING THE DATA
-        * Reading the CSV file into a dataframe
+        * Reading the CSV files into dataframes
     2. CLEANING THE DATA
         * Imputing missing or null values
+    3. FEATURE CREATION
+    4. DISTRIBUTION EXPLORATION
+    5. GRAPHICAL ANALYSES
+    6. CORRELATION MATRICES
+    7. LINEAR REGRESSION
+    8. MAIN FUNCTION
+    9. MAIN CALL
+        
+        
     3. DISTRIBUTION EXPLORATION
         * Examining the distribution of major variables
     4. CORRELATION MATRIX
@@ -45,6 +54,7 @@ Questions we're answering:
 
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from statsmodels.formula.api import ols
 import statistics
 
@@ -52,532 +62,837 @@ import statistics
     1. LOADING THE DATA
 """
 
-# load the file
-df = pd.read_csv('rideshare_kaggle.csv')
+# loading rideshare data via kaggle
+def load_rideshare():
+    return pd.read_csv('rideshare_kaggle.csv')
 
-# early exploration
-print(df[['price', 'source', 'destination', 'cab_type']])
-print(df.columns)
-
-print(df[['short_summary', 'long_summary']])
-print(df['short_summary'].value_counts())
-
-# pulling in average rent for each neighborhood via rentcafe: https://www.rentcafe.com/average-rent-market-trends/us/ma/boston/
-rent_df = pd.read_csv('boston_neighborhood_rentcafe.csv')
+# loading rent data
+def load_rents():
+    # average rent for each neighborhood via rentcafe: https://www.rentcafe.com/average-rent-market-trends/us/ma/boston/
+    return pd.read_csv('boston_neighborhood_rentcafe.csv')
 
 """
     2. CLEANING THE DATA
 """
 
-# checking to see if any columns have null values: only price has missing values
-print(df.isnull().any())
+# removing missing values from the rideshare data
+def clean_rideshare(rideshare_df):
+    print('________________________________________________________________\n')
+    print("CLEANING RIDESHARE DATA:")
+    
+    # checking to see if any columns have null values: only price has missing values
+    print(rideshare_df.isnull().any())
+    
+    # 55,095 price values are missing
+    print(f"Number of missing price values: {rideshare_df['price'].isnull().sum()}")
+    
+    # there are 693,071 records total
+    print(f'Number of records: {len(rideshare_df)}')
+    
+    # that's less than 8%
+    print(f"Percent missing price: {rideshare_df['price'].isnull().sum() / len(rideshare_df)}")
+    
+    # because of the small percent missing, we decided to remove them from the dataset
+    rideshare_df = rideshare_df.dropna()
+    
+    # double-checking to verify: df now has no missing values
+    print(rideshare_df.isnull().any())
+    
+    # removing id and timestamp (all in eastern)
+    rideshare_df = rideshare_df.drop(columns=['id', 'timestamp'])
+    
+    # removing product_id because name is a better alternative
+    rideshare_df = rideshare_df.drop(columns=['product_id'])
 
-# 55,095 price values are missing
-print(f"Number of missing price values: {df['price'].isnull().sum()}")
+    print("END RIDESHARE CLEANING")
+    print('________________________________________________________________\n')
+    return rideshare_df
 
-# there are 693,071 records total
-print(f'Number of records: {len(df)}')
+# adjusting the rent data to align with the same neighborhoods in the rideshare frame
+def clean_rent(rent_df, rideshare_df):
+    print('________________________________________________________________\n')
+    print("CLEANING RENT DATA:")
+    
+    # getting a list of all the neighborhoods in rideshare and from the rent-cafe data
+    source_neighborhoods = list(rideshare_df['source'].unique())
+    source_neighborhoods.sort()
+    destination_neighborhoods = list(rideshare_df['destination'].unique())
+    destination_neighborhoods.sort()
+    rent_neighborhoods = list(rent_df['neighborhood'])
+    rent_neighborhoods.sort()
 
-# that's less than 8%
-print(f"Percent missing price: {df['price'].isnull().sum() / len(df)}")
+    # printing each out to see what needs to be renamed/removed
+    print(source_neighborhoods)
+    print(destination_neighborhoods)
+    print(rent_neighborhoods)
 
-# because of the small percent missing, we decided to remove them from the dataset
-df = df.dropna()
+    # making a flag field set to 0 by default and making neighborhood index for rent_df
+    blank_col = [0] * len(rent_df)
+    rent_df['isKept'] = blank_col
+    rent_df = rent_df.set_index(['neighborhood'])
 
-# double-checking to verify: df now has no missing values
-print(df.isnull().any())
-
-# removing id and timestamp (all in eastern)
-df = df.drop(columns=['id', 'timestamp'])
-
-# making a flag field for cab type
-df['is_uber'] = df['cab_type'].apply(lambda x: 1 if x == 'Uber' else 0)
-
-# what about price per mile as a metric
-df['price_dist_ratio'] = df['price'] / df['distance']
-
-
-"""
-    3. DISTRIBUTION EXPLORATION
-"""
-
-# for later analysis, splitting uber and lyft frames
-uber_frame = df[df['is_uber'] == 1]
-lyft_frame = df[df['is_uber'] == 0]
-
-# printing the value counts for each column to double check that no data is missing but not NaN (like using 'missing' to indicate)
-# at a glance everything looks clear
-for column in df.columns:
-    print(df[column].value_counts())
-
-# next up (and this should maybe go in section 2) is removing columns we don't need and converting date/time stuff to datetime objects
-# going to determine which we don't need with a correlation matrix
-
-# histograms of some of the qualitative variables
-
-# product id? i think this is the type of uber/lyft; idk what name is in comparison
-print(df['product_id'].value_counts())
-print(df['name'].value_counts())
-
-# product id has some... hard to decipher guid values; name does not and they seem substitutable
-print(df[['product_id', 'name']].value_counts())
-# on second glance, product_id has uber values as guids, but name is fixed for everything
-# we'll just use name then
-df = df.drop('product_id', axis=1)
-
-# making a histogram of names
-name_df = df[['name', 'is_uber']].value_counts().to_frame()
-name_df = name_df.reset_index()
-name_df = name_df.set_index('name')
-
-# as i do this, it occurs to me... these are all the same frequency? or very similar
-# that's really odd to me, I'm wondering if this is a sample with control for product type
-
-# going to skip a useless histogram for now, moving onto making a chart of average price
-# maybe do [price]mean, i think it's faster?
-name_avg_price_df = df.groupby(['name'])['price'].mean()
-uber_name_df = uber_frame.groupby(['name'])['price'].mean()
-lyft_name_df = lyft_frame.groupby(['name'])['price'].mean()
-
-# this seems useful: average price by type
-plt.figure()
-lyft_name_df.plot(kind='bar', color='red')
-plt.title('Average Price by Ride Type (Lyft)')
-plt.ylabel('Average Price (USD)')
-plt.xlabel('Ride Type')
-plt.xticks(rotation=45)
-plt.show()
-
-plt.figure()
-uber_name_df.plot(kind='bar', color='green')
-plt.title('Average Price by Ride Type (Uber)')
-plt.ylabel('Average Price (USD)')
-plt.xlabel('Ride Type')
-plt.xticks(rotation=45)
-plt.show()
-
-# think it would be cool to compare average price to total revenue (sum of price)
-# this is... not useful because there are about the same number of each type
-# which i noticed earlier... oops lol
-uber_name_df = uber_frame.groupby(['name'])['price'].sum()
-lyft_name_df = lyft_frame.groupby(['name'])['price'].sum()
-
-# this seems useful: total price (revenue) by type
-plt.figure()
-lyft_name_df.plot(kind='bar', color='red')
-plt.title('Total Revenue by Ride Type (Lyft)')
-plt.ylabel('Revenue (USD)')
-plt.xlabel('Ride Type')
-plt.xticks(rotation=45)
-plt.show()
-
-plt.figure()
-uber_name_df.plot(kind='bar', color='green')
-plt.title('Total Revenue by Ride Type (Uber)')
-plt.ylabel('Revenue (USD)')
-plt.xlabel('Ride Type')
-plt.xticks(rotation=45)
-plt.show()
-
-
-
-# weather average price: literally no effect, like at all lol
-weather_avg_price_df = df.groupby(['short_summary'])['price'].mean()
-weather_avg_price_uber = uber_frame.groupby(['short_summary'])['price'].mean()
-weather_avg_price_lyft = lyft_frame.groupby(['short_summary'])['price'].mean()
-plt.figure()
-weather_avg_price_df.plot(kind='line')
-weather_avg_price_uber.plot(kind='line', color='green')
-weather_avg_price_lyft.plot(kind='line', color='red')
-plt.title('Average Price by Weather')
-plt.ylabel('Average Price (USD)')
-plt.xlabel('Weather')
-plt.xticks(rotation=45)
-plt.show()
-
-weather_avg_price_df = df.groupby(['short_summary'])['distance'].mean()
-plt.figure()
-weather_avg_price_df.plot(kind='bar')
-plt.show()
-
-# how about by hour of the day
-hour_avg_price_df = df.groupby(['hour'])['price'].mean()
-plt.figure()
-hour_avg_price_df.plot(kind='line')
-plt.show()
-
-
-
-
-
-uber_name_df = uber_frame.groupby(['name'])['price'].sum()
-lyft_name_df = lyft_frame.groupby(['name'])['price'].sum()
-
-
-# now *this* is a little more interesting: the price per mile spikes around rush hours and midday
-hour_avg_price_ratio_df = df.groupby(['hour'])['price_dist_ratio'].mean()
-hour_avg_price_ratio_uber = uber_frame.groupby(['hour'])['price_dist_ratio'].mean()
-hour_avg_price_ratio_lyft = lyft_frame.groupby(['hour'])['price_dist_ratio'].mean()
-
-# this is examining the price/distance ratio, which is think is dollars and miles
-plt.figure()
-hour_avg_price_ratio_df.plot(kind='line')
-hour_avg_price_ratio_uber.plot(kind='line', color='green')
-hour_avg_price_ratio_lyft.plot(kind='line', color='red')
-plt.title('Average Price-Distance Ratio by Hour')
-plt.xlabel('Hour')
-plt.ylabel('Average Price-Distance Ratio (USD per Mile)')
-plt.show()
-
-# surge mult: really spikes around lunch
-hour_avg_surge_df = df.groupby(['hour'])['surge_multiplier'].mean()
-uber_avg_surge_df = uber_frame.groupby(['hour'])['surge_multiplier'].mean()
-lyft_avg_surge_df = lyft_frame.groupby(['hour'])['surge_multiplier'].mean()
-
-plt.figure()
-# hour_avg_surge_df.plot(kind='line')
-# uber_avg_surge_df.plot(kind='line', color='green')
-lyft_avg_surge_df.plot(kind='line', color='red')
-plt.title('Average Surge Multiplier by Hour')
-plt.xlabel('Hour')
-plt.ylabel('Average Surge Multiplier')
-plt.show()
-
-# uber doesn't use surge multiplier
-
-
-# pick up with more of these: categorical variable price charts
+    # manually looking through results and figuring out how to rename
+    # these two are kept exactly the same
+    rent_df.loc['Back Bay', ['isKept']] = 1
+    rent_df.loc['Beacon Hill', ['isKept']] = 1
+    
+    # Boston University missing, as per googling will make this Fenway
+    rent_df.loc['Boston University'] = rent_df.loc['Fenway - Kenmore']
+    rent_df.loc['Boston University', ['isKept']] = 1
+    
+    # Fenway - Kenmore becomes Fenway
+    rent_df.loc['Fenway'] = rent_df.loc['Fenway - Kenmore']
+    rent_df.loc['Fenway', ['isKept']] = 1
+    
+    # Downtown - Financial District becomes Financial District
+    rent_df.loc['Financial District'] = rent_df.loc['Downtown - Financial District']
+    rent_df.loc['Financial District', ['isKept']] = 1
+    
+    # haymarket square is between west and south end? going to use average of south/west end rent
+    rent_df.loc['Haymarket Square'] = rent_df.loc['South End Boston']
+    south_west_avg = statistics.mean([rent_df.loc['South End Boston']['average_rent'], rent_df.loc['West End Boston']['average_rent']])
+    rent_df.loc['Haymarket Square', ['average_rent']] = south_west_avg
+    rent_df.loc['Haymarket Square', ['isKept']] = 1
+    
+    # north end boston becomes north end
+    rent_df.loc['North End'] = rent_df.loc['North End Boston']
+    rent_df.loc['North End', ['isKept']] = 1
+    
+    # north station is between north/west end, doing average
+    rent_df.loc['North Station'] = rent_df.loc['North End Boston']
+    north_west_avg = statistics.mean([rent_df.loc['North End Boston']['average_rent'], rent_df.loc['West End Boston']['average_rent']])
+    rent_df.loc['North Station', ['average_rent']] = north_west_avg
+    rent_df.loc['North Station', ['isKept']] = 1
+    
+    # northeastern university is in fenway - kenmore (already renamed to fenway and kept)
+    rent_df.loc['Northeastern University'] = rent_df.loc['Fenway']
+    
+    # south station is downtown, which was renamed to financial district
+    rent_df.loc['South Station'] = rent_df.loc['Financial District']
+    
+    # theatre district is bay village
+    rent_df.loc['Theatre District'] = rent_df.loc['Bay Village']
+    rent_df.loc['Theatre District', ['isKept']] = 1
+    
+    # west end boston becomes west end
+    rent_df.loc['West End'] = rent_df.loc['West End Boston']
+    rent_df.loc['West End', ['isKept']] = 1
+    
+    # with everything adjusted, retain the rows to keep and drop the flag
+    cleaned_rent_df = rent_df[rent_df['isKept'] == 1]
+    cleaned_rent_df = cleaned_rent_df.drop(['isKept'], axis=1)
+    
+    print("END RENT CLEANING")
+    print('________________________________________________________________\n')
+    return cleaned_rent_df
 
 """
-    4. CORRELATION MATRIX
+    3. FEATURE CREATION
 """
 
+# adding a column for whether or not a rideshare was uber
+def add_is_uber(rideshare_df):
+    # making a flag field for cab type
+    rideshare_df['is_uber'] = rideshare_df['cab_type'].apply(lambda x: 1 if x == 'Uber' else 0)
+    return rideshare_df
 
-# getting correlation matrix of variables to price
-price_correlation_df = df.corr()['price'].to_frame()
+# adding a column for the ratio of rideshare price to its distance
+def add_price_dist_ratio(rideshare_df):
+    # what about price per mile as a metric
+    rideshare_df['price_dist_ratio'] = rideshare_df['price'] / rideshare_df['distance']
+    return rideshare_df
 
-# renaming column
-price_correlation_df.columns = ['correlation']
+# adding the average rent of the source/destination of a ride
+def add_average_rents(rideshare_df, rent_df):
+    # rent_df has neighborhood as index, here it needs to be a column
+    join_rent_df = rent_df.reset_index()
+    
+    # joining back to the main df for source
+    rideshare_df = pd.merge(rideshare_df, join_rent_df, how='left', left_on='source', right_on='neighborhood')
+    rideshare_df = rideshare_df.rename(columns={'average_rent': 'source_rent'})
+    rideshare_df = rideshare_df.drop(['neighborhood'], axis=1)
+    
+    # doing the same for destination
+    rideshare_df = pd.merge(rideshare_df, join_rent_df, how='left', left_on='destination', right_on='neighborhood')
+    rideshare_df = rideshare_df.rename(columns={'average_rent': 'destination_rent'})
+    rideshare_df = rideshare_df.drop(['neighborhood'], axis=1)
 
-# because we care about abs value, making a column to preserve sign
-price_correlation_df['relationship'] = price_correlation_df['correlation'].apply(lambda x: 'direct' if x >= 0 else 'inverse')
+    # returning full frame
+    return rideshare_df
 
-# removing sign from correlation
-price_correlation_df['correlation'] = price_correlation_df['correlation'].apply(lambda x: abs(x))
+# returns dataframe of just the uber rides
+def get_uber_frame(rideshare_df):
+    return rideshare_df[rideshare_df['is_uber'] == 1]
 
-# sorting descending by correlation
-price_correlation_df = price_correlation_df.sort_values(['correlation'], ascending=False)
-
-# no reason to preserve price since it's the variable
-price_correlation_df = price_correlation_df[1:]
-
-# pruning out price_dist_ratio, that's not meant to be in there, it uses price
-price_correlation_df = price_correlation_df.drop(['price_dist_ratio'], axis=0)
-
-# really only the top 5 or so matter
-price_correlation_df = price_correlation_df[0:5]
-
-price_correlation_df = price_correlation_df.reset_index()
-price_correlation_df.columns = ['variable', 'correlation', 'relationship']
-
-# printing the result and plotting
-print(price_correlation_df)
-
-# maybe add color code relationship to this? honestly the takeaway is distance and surge are the only real numeric ones that matter
-plt.figure()
-plt.bar(x=price_correlation_df['variable'], height=price_correlation_df['correlation'], color=price_correlation_df['relationship'].map({'direct':'blue','inverse':'black'}))
-plt.xticks(rotation=45)
-plt.xlabel('Variable')
-plt.ylabel('Correlation Strength')
-plt.title('Overall Variable Correlations (Top 5)')
-plt.show()
+# returns dataframe of just the lyft rides
+def get_lyft_frame(rideshare_df):
+    return rideshare_df[rideshare_df['is_uber'] == 0]
 
 """
-    5. LINEAR REGRESSION
+    4. DISTRIBUTION EXPLORATION
 """
 
-# making a model with distance, surge, and both
-distance_model = ols("price ~ distance", df).fit()
-surge_model = ols("price ~ surge_multiplier", df).fit()
-combo_model = ols("price ~ distance + surge_multiplier", df).fit()
+# displays early exploration of data
+def prelim_exploration(rideshare_df):
+    print('________________________________________________________________\n')
+    print('PRELIMINARY EXPLORATION:')
 
-# examining summaries of all models
-print(distance_model.summary())
-print(surge_model.summary())
-print(combo_model.summary())
+    # looking at basic data and columns
+    print(rideshare_df[['price', 'source', 'destination', 'cab_type']])
+    print(rideshare_df.columns)
+    
+    # examining ride summaries (weather)
+    print(rideshare_df[['short_summary', 'long_summary']])
+    print(rideshare_df['short_summary'].value_counts())
 
-# update: appears uber vs. lyft is notable (with uber being more expensive)
-cab_type_model = ols("price ~ is_uber", df).fit()
-print(cab_type_model.summary())
+    print('END PRELIMINARY EXPLORATION')
+    print('________________________________________________________________\n')
+    
+# examines value counts for each column
+def value_count_exploration(rideshare_df):
+    print('________________________________________________________________\n')
+    print('VALUE COUNT EXPLORATION:')
+    
+    # printing the value counts for each column
+    for column in rideshare_df.columns:
+        print(rideshare_df[column].value_counts())
 
-# making a full regression model with cab
-model_with_cab = ols('price ~ distance + surge_multiplier + is_uber', df).fit()
-print(model_with_cab.summary())
+    print('END VALUE COUNT EXPLORATION')
+    print('________________________________________________________________\n')
 
-# very small bump to r-squared...
+# looks at the distribution of the different rideshare types (names)
+def name_exploration(rideshare_df):
+    print('________________________________________________________________\n')
+    print('NAME EXPLORATION:')
 
-# real estate modeling
-estate_model = ols("price ~ distance + surge_multiplier + source_rent + destination_rent", df).fit()
-print(estate_model.summary())
+    # discovering that the data has about even distributions of names
+    print(rideshare_df[['name', 'is_uber']].value_counts().to_frame())
 
-
-"""
-    6. UBER VS. LYFT LINEAR REGRESSION
-"""
-
-# code here
-# do this tonight
-
-"""
-    6a. Uber
-"""
-
-
-price_correlation_df = uber_frame.corr()['price'].to_frame()
-
-# renaming column
-price_correlation_df.columns = ['correlation']
-
-# because we care about abs value, making a column to preserve sign
-price_correlation_df['relationship'] = price_correlation_df['correlation'].apply(lambda x: 'direct' if x >= 0 else 'inverse')
-
-# removing sign from correlation
-price_correlation_df['correlation'] = price_correlation_df['correlation'].apply(lambda x: abs(x))
-
-# sorting descending by correlation
-price_correlation_df = price_correlation_df.sort_values(['correlation'], ascending=False)
-
-# no reason to preserve price since it's the variable
-price_correlation_df = price_correlation_df[1:]
-
-# pruning out price_dist_ratio, that's not meant to be in there, it uses price
-price_correlation_df = price_correlation_df.drop(['price_dist_ratio'], axis=0)
-
-# really only the top 5 or so matter
-price_correlation_df = price_correlation_df[0:5]
-
-price_correlation_df = price_correlation_df.reset_index()
-price_correlation_df.columns = ['variable', 'correlation', 'relationship']
-
-# printing the result and plotting
-print(price_correlation_df)
-
-# maybe add color code relationship to this? honestly the takeaway is distance and surge are the only real numeric ones that matter
-plt.figure()
-plt.bar(x=price_correlation_df['variable'], height=price_correlation_df['correlation'], color=price_correlation_df['relationship'].map({'direct':'green','inverse':'black'}))
-plt.xticks(rotation=45)
-plt.xlabel('Variable')
-plt.ylabel('Correlation Strength')
-plt.title('Uber Variable Correlations (Top 5)')
-plt.show()
-
-
-distance_model = ols("price ~ distance", uber_frame).fit()
-
-# examining summaries of all models
-print(distance_model.summary())
+    print('END NAME EXPLORATION')
+    print('________________________________________________________________\n')
 
 """
-    6b. Lyft
+    5. GRAPHICAL ANALYSES
 """
 
-price_correlation_df = lyft_frame.corr()['price'].to_frame()
+# analyses the average price of each type of rideshare
+def average_price_by_name(uber_frame, lyft_frame):
+    print('________________________________________________________________\n')
+    print('AVERAGE PRICE BY NAME:')
 
-# renaming column
-price_correlation_df.columns = ['correlation']
+    # making frames for uber and lyft that have average price aggregated by name
+    uber_name_df = uber_frame.groupby(['name'])['price'].mean()
+    lyft_name_df = lyft_frame.groupby(['name'])['price'].mean()    
 
-# because we care about abs value, making a column to preserve sign
-price_correlation_df['relationship'] = price_correlation_df['correlation'].apply(lambda x: 'direct' if x >= 0 else 'inverse')
+    # displaying uber
+    print('Uber:')
+    print(uber_name_df)
+    plt.figure()
+    uber_name_df.plot(kind='bar', color='green')
+    plt.title('Average Price by Ride Type (Uber)')
+    plt.ylabel('Average Price (USD)')
+    plt.xlabel('Ride Type')
+    plt.xticks(rotation=45)
+    plt.show()
 
-# removing sign from correlation
-price_correlation_df['correlation'] = price_correlation_df['correlation'].apply(lambda x: abs(x))
+    # displaying lyft
+    print('Lyft:')
+    print(lyft_name_df)
+    plt.figure()
+    lyft_name_df.plot(kind='bar', color='red')
+    plt.title('Average Price by Ride Type (Lyft)')
+    plt.ylabel('Average Price (USD)')
+    plt.xlabel('Ride Type')
+    plt.xticks(rotation=45)
+    plt.show()
 
-# sorting descending by correlation
-price_correlation_df = price_correlation_df.sort_values(['correlation'], ascending=False)
+    print('END AVERAGE PRICE BY NAME')
+    print('________________________________________________________________\n')
 
-# no reason to preserve price since it's the variable
-price_correlation_df = price_correlation_df[1:]
+# analyses total price (revenue) by type of rideshare: this isn't useful because of the even sampling, but this was done to double check names
+def total_price_by_name(uber_frame, lyft_frame):
+    print('________________________________________________________________\n')
+    print('TOTAL PRICE (REVENUE) BY NAME:')
 
-# pruning out price_dist_ratio, that's not meant to be in there, it uses price
-price_correlation_df = price_correlation_df.drop(['price_dist_ratio'], axis=0)
+    # making frames for uber and lyft that have total price aggregated by name
+    uber_name_df = uber_frame.groupby(['name'])['price'].sum()
+    lyft_name_df = lyft_frame.groupby(['name'])['price'].sum()    
 
-# really only the top 5 or so matter
-price_correlation_df = price_correlation_df[0:5]
+    # displaying uber
+    print('Uber:')
+    print(uber_name_df)
+    plt.figure()
+    uber_name_df.plot(kind='bar', color='green')
+    plt.title('Total Revenue by Ride Type (Uber)')
+    plt.ylabel('Revenue (USD)')
+    plt.xlabel('Ride Type')
+    plt.xticks(rotation=45)
+    plt.show()
 
-price_correlation_df = price_correlation_df.reset_index()
-price_correlation_df.columns = ['variable', 'correlation', 'relationship']
+    # displaying lyft
+    print('Lyft:')
+    print(lyft_name_df)
+    plt.figure()
+    lyft_name_df.plot(kind='bar', color='red')
+    plt.title('Total Revenue by Ride Type (Lyft)')
+    plt.ylabel('Revenue (USD)')
+    plt.xlabel('Ride Type')
+    plt.xticks(rotation=45)
+    plt.show()
 
-# printing the result and plotting
-print(price_correlation_df)
+    print('END TOTAL PRICE (REVENUE) BY NAME')
+    print('________________________________________________________________\n')
 
-# maybe add color code relationship to this? honestly the takeaway is distance and surge are the only real numeric ones that matter
-plt.figure()
-plt.bar(x=price_correlation_df['variable'], height=price_correlation_df['correlation'], color=price_correlation_df['relationship'].map({'direct':'red','inverse':'black'}))
-plt.xticks(rotation=45)
-plt.xlabel('Variable')
-plt.ylabel('Correlation Strength')
-plt.title('Lyft Variable Correlations (Top 5)')
-plt.show()
+# analyses average price by the weather... the effects turned out to be mild
+def average_price_by_weather(rideshare_df, uber_frame, lyft_frame):
+    print('________________________________________________________________\n')
+    print('AVERAGE PRICE BY WEATHER:')
 
+    # making frames for overall/uber/lyft with average price agg by weather (short summary)
+    weather_avg_price_df = rideshare_df.groupby(['short_summary'])['price'].mean()
+    weather_avg_price_uber = uber_frame.groupby(['short_summary'])['price'].mean()
+    weather_avg_price_lyft = lyft_frame.groupby(['short_summary'])['price'].mean()
 
-distance_model = ols("price ~ distance", lyft_frame).fit()
-surge_model = ols("price ~ surge_multiplier", lyft_frame).fit()
-combo_model = ols("price ~ distance + surge_multiplier", lyft_frame).fit()
+    # printing results
+    print('Overall:')
+    print(weather_avg_price_df)
+    print('Uber:')
+    print(weather_avg_price_uber)
+    print('Lyft:')
+    print(weather_avg_price_lyft)
+    
+    # plotting multi line chart
+    plt.figure()
+    weather_avg_price_df.plot(kind='line', color='blue')
+    weather_avg_price_uber.plot(kind='line', color='green')
+    weather_avg_price_lyft.plot(kind='line', color='red')
+    plt.title('Average Price by Weather')
+    plt.ylabel('Average Price (USD)')
+    plt.xlabel('Weather')
+    overall_label = patches.Patch(color='blue', label='Overall')
+    uber_label = patches.Patch(color='green', label='Uber')
+    lyft_label = patches.Patch(color='red', label='Lyft')
+    plt.legend(handles=[overall_label, uber_label, lyft_label], loc='upper right')
+    plt.xticks(rotation=45)
+    plt.show()
 
-# examining summaries of all models
-print(distance_model.summary())
-print(surge_model.summary())
-print(combo_model.summary())
+    print('END AVERAGE PRICE BY WEATHER')
+    print('________________________________________________________________\n')
+
+# analyses average distance of a ride by weather
+def average_distance_by_weather(rideshare_df, uber_frame, lyft_frame):
+    print('________________________________________________________________\n')
+    print('AVERAGE DISTANCE BY WEATHER:')
+
+    # making frames for overall/uber/lyft with average distance agg by weather (short summary)
+    weather_avg_dist_df = rideshare_df.groupby(['short_summary'])['distance'].mean()
+    weather_avg_dist_uber = uber_frame.groupby(['short_summary'])['distance'].mean()
+    weather_avg_dist_lyft = lyft_frame.groupby(['short_summary'])['distance'].mean()
+
+    # printing results
+    print('Overall:')
+    print(weather_avg_dist_df)
+    print('Uber:')
+    print(weather_avg_dist_uber)
+    print('Lyft:')
+    print(weather_avg_dist_lyft)
+    
+    # plotting multi line chart
+    plt.figure()
+    weather_avg_dist_df.plot(kind='line')
+    weather_avg_dist_uber.plot(kind='line', color='green')
+    weather_avg_dist_lyft.plot(kind='line', color='red')
+    plt.title('Average Distance by Weather')
+    plt.ylabel('Average Distance (miles)')
+    plt.xlabel('Weather')
+    overall_label = patches.Patch(color='blue', label='Overall')
+    uber_label = patches.Patch(color='green', label='Uber')
+    lyft_label = patches.Patch(color='red', label='Lyft')
+    plt.legend(handles=[overall_label, uber_label, lyft_label], loc='upper right')
+    plt.xticks(rotation=45)
+    plt.show()
+
+    print('END AVERAGE DISTANCE BY WEATHER')
+    print('________________________________________________________________\n')
+
+# analyses average price of a ride by hour of the day
+def average_price_by_hour(rideshare_df, uber_frame, lyft_frame):
+    print('________________________________________________________________\n')
+    print('AVERAGE PRICE BY HOUR:')
+
+    # making frames for overall/uber/lyft with average price agg by hour
+    hour_avg_price_df = rideshare_df.groupby(['hour'])['price'].mean()
+    hour_avg_price_uber = uber_frame.groupby(['hour'])['price'].mean()
+    hour_avg_price_lyft = lyft_frame.groupby(['hour'])['price'].mean()
+
+    # printing results
+    print('Overall:')
+    print(hour_avg_price_df)
+    print('Uber:')
+    print(hour_avg_price_uber)
+    print('Lyft:')
+    print(hour_avg_price_lyft)
+    
+    # plotting multi line chart
+    plt.figure()
+    hour_avg_price_df.plot(kind='line')
+    hour_avg_price_uber.plot(kind='line', color='green')
+    hour_avg_price_lyft.plot(kind='line', color='red')
+    plt.title('Average Price by Hour')
+    plt.ylabel('Average Price (USD)')
+    plt.xlabel('Hour')
+    overall_label = patches.Patch(color='blue', label='Overall')
+    uber_label = patches.Patch(color='green', label='Uber')
+    lyft_label = patches.Patch(color='red', label='Lyft')
+    plt.legend(handles=[overall_label, uber_label, lyft_label], loc='upper right')
+    plt.show()
+
+    print('END AVERAGE PRICE BY HOUR')
+    print('________________________________________________________________\n')
+
+# analyses average price/dist ratio of a ride by hour of the day
+def average_price_dist_ratio_by_hour(rideshare_df, uber_frame, lyft_frame):
+    print('________________________________________________________________\n')
+    print('AVERAGE PRICE DISTANCE RATIO BY HOUR:')
+
+    # making frames for overall/uber/lyft with average price dist agg by hour
+    hour_avg_price_ratio_df = rideshare_df.groupby(['hour'])['price_dist_ratio'].mean()
+    hour_avg_price_ratio_uber = uber_frame.groupby(['hour'])['price_dist_ratio'].mean()
+    hour_avg_price_ratio_lyft = lyft_frame.groupby(['hour'])['price_dist_ratio'].mean()
+
+    # printing results
+    print('Overall:')
+    print(hour_avg_price_ratio_df)
+    print('Uber:')
+    print(hour_avg_price_ratio_uber)
+    print('Lyft:')
+    print(hour_avg_price_ratio_lyft)
+    
+    # plotting multi line chart
+    plt.figure()
+    hour_avg_price_ratio_df.plot(kind='line')
+    hour_avg_price_ratio_uber.plot(kind='line', color='green')
+    hour_avg_price_ratio_lyft.plot(kind='line', color='red')
+    plt.title('Average Price-Distance Ratio by Hour')
+    plt.xlabel('Hour')
+    plt.ylabel('Average Price-Distance Ratio (USD per Mile)')
+    overall_label = patches.Patch(color='blue', label='Overall')
+    uber_label = patches.Patch(color='green', label='Uber')
+    lyft_label = patches.Patch(color='red', label='Lyft')
+    plt.legend(handles=[overall_label, uber_label, lyft_label], loc='upper right')
+    plt.show()
+
+    print('END AVERAGE PRICE DISTANCE RATIO BY HOUR')
+    print('________________________________________________________________\n')
+
+# analyses surge multiplier by hour (only lyft has surge mult)
+def average_surge_mult_by_hour(lyft_frame):
+    print('________________________________________________________________\n')
+    print('AVERAGE SURGE MULTIPLIER BY HOUR:')
+
+    # finding average surge multiplier for lyft
+    lyft_avg_surge_df = lyft_frame.groupby(['hour'])['surge_multiplier'].mean()
+
+    # printing results
+    print('Lyft:')
+    print(lyft_avg_surge_df)
+    
+    # plotting line chart
+    plt.figure()
+    lyft_avg_surge_df.plot(kind='line', color='red')
+    plt.title('Average Surge Multiplier by Hour (Lyft)')
+    plt.xlabel('Hour')
+    plt.ylabel('Average Surge Multiplier')
+    plt.show()
+
+    print('END AVERAGE SURGE MULTIPLIER BY HOUR')
+    print('________________________________________________________________\n')
+
+# showing average rent by neighborhood (this is just the cleaned rent df)
+def average_rent_by_neighborhood(rent_df):
+    print('________________________________________________________________\n')
+    print('AVERAGE RENT BY NEIGHBORHOOD:')
+
+    print(rent_df)
+    plt.figure()
+    rent_df.plot(kind='bar')
+    plt.title('Average Rent by Neighborhood')
+    plt.xlabel('Neighborhood')
+    plt.ylabel('Average Rent (USD)')
+    plt.legend('', frameon=False)
+    plt.show()
+
+    print('END AVERAGE RENT BY NEIGHBORHOOD')
+    print('________________________________________________________________\n')
+
+# attempting to make a map with the coordinates of rides... they weren't spread enough
+def price_map(rideshare_df):    
+    print('________________________________________________________________\n')
+    print('PRICE MAP')
+
+    # the coordinates are just one per neighborhood, which is why this map doesn't work
+    print(rideshare_df[['latitude', 'longitude']].value_counts())
+    plt.figure()
+    plt.scatter(rideshare_df['longitude'], rideshare_df['latitude'], s=1, c=rideshare_df['price'], alpha=0.5)
+    plt.title('(Attempted) Price Map of Boston')
+    plt.xlabel('Longitude')
+    plt.xlabel('Latitude')
+    plt.show()
+
+    print('END PRICE MAP')
+    print('________________________________________________________________\n')
+
+# average price/rent by neighborhood
+def average_price_rent_by_neighborhood(rideshare_df, rent_df):
+    print('________________________________________________________________\n')
+    print('AVERAGE PRICE AND RENT BY NEIGHBORHOOD')
+    
+    # source average price frame
+    source_price_df = rideshare_df.groupby(['source'])['price'].mean().to_frame()
+    source_price_df.columns = ['avg_source_price']
+    
+    # destination average price frame
+    destination_price_df = rideshare_df.groupby(['destination'])['price'].mean().to_frame()
+    destination_price_df.columns = ['avg_destination_price']
+    
+    # adding in rent price in thousands
+    rent_price_df = rent_df
+    rent_price_df = rent_price_df.reset_index()
+    rent_price_df.columns = ['source', 'avg_rent_thousands']
+    rent_price_df = rent_price_df.set_index(['source'])
+    
+    # joining on index and dividing rent into thousands
+    neighborhood_df = source_price_df.merge(destination_price_df, how='left', left_index=True, right_index=True)
+    neighborhood_df = neighborhood_df.merge(rent_price_df, how='left', left_index=True, right_index=True)
+    neighborhood_df['avg_rent_thousands'] = neighborhood_df['avg_rent_thousands'] / 1000
+
+    # modest inverse correlation
+    print(neighborhood_df)
+    print(neighborhood_df.corr().to_string())
+    
+    # weak relationship between rent and rideshare prices
+    plt.figure()
+    neighborhood_df.plot(kind='bar')
+    plt.title('Average Pricing and Rent by Neighborhood')
+    plt.xlabel('Neighborhood')
+    plt.xticks(fontsize=8)
+    plt.ylabel('Average Price (USD) or Rent (thousands USD)')
+    source_label = patches.Patch(color='#1f77b4', label='Avg. Source Price (USD)')
+    dest_label = patches.Patch(color='#ff7f0e', label='Avg. Dest. Price (USD)')
+    rent_label = patches.Patch(color='#2ca02c', label='Avg. Rent (thousands USD)')
+    plt.legend(handles=[source_label, dest_label, rent_label], loc='upper right')
+    plt.show()
+    
+    print('END AVERAGE PRICE AND RENT BY NEIGHBORHOOD')
+    print('________________________________________________________________\n')
 
 """
-    7. PRICE MAP
+    6. CORRELATION MATRICES
 """
 
-# code here
-# maybe?
+# creates overall correlation matrix
+def overall_correlation_matrix(rideshare_df):
+    print('________________________________________________________________\n')
+    print('OVERALL CORRELATION MATRIX')
+    
+    # getting correlation matrix of variables to price
+    price_correlation_df = rideshare_df.corr()['price'].to_frame()
+    price_correlation_df.columns = ['correlation']
+    
+    # recording direction then removing sign from correlation
+    price_correlation_df['relationship'] = price_correlation_df['correlation'].apply(lambda x: 'direct' if x >= 0 else 'inverse')
+    price_correlation_df['correlation'] = price_correlation_df['correlation'].apply(lambda x: abs(x))
+    
+    # sorting descending by correlation and removing price
+    price_correlation_df = price_correlation_df.sort_values(['correlation'], ascending=False)
+    price_correlation_df = price_correlation_df[1:]
+    
+    # pruning out price_dist_ratio because it can't be used for regression
+    price_correlation_df = price_correlation_df.drop(['price_dist_ratio'], axis=0)
+    
+    # really only the top 5 or so matter, the rest drop off quickly
+    price_correlation_df = price_correlation_df[0:5]
+    
+    price_correlation_df = price_correlation_df.reset_index()
+    price_correlation_df.columns = ['variable', 'correlation', 'relationship']
+    
+    # printing the result and plotting
+    print(price_correlation_df)
+    
+    plt.figure()
+    plt.bar(x=price_correlation_df['variable'], height=price_correlation_df['correlation'], color=price_correlation_df['relationship'].map({'direct':'blue','inverse':'black'}))
+    plt.xticks(rotation=45)
+    plt.xlabel('Variable')
+    plt.ylabel('Correlation Strength')
+    plt.title('Overall Variable Correlations (Top 5)')
+    direct_label = patches.Patch(color='blue', label='Direct')
+    inverse_label = patches.Patch(color='black', label='Inverse')
+    plt.legend(handles=[direct_label, inverse_label], loc='upper right')
+    plt.show()
 
-# graphing rents
-# restaurant_review_frame.join(other=restaurant_ids_dataframe,on='business_id',how='left')
+    print('END OVERALL CORRELATION MATRIX')
+    print('________________________________________________________________\n')
+    
+# creates correlation matrix for uber
+def uber_correlation_matrix(uber_frame):
+    print('________________________________________________________________\n')
+    print('UBER CORRELATION MATRIX')
+    
+    # getting correlation matrix of variables to price
+    price_correlation_df = uber_frame.corr()['price'].to_frame()
+    price_correlation_df.columns = ['correlation']
+    
+    # recording direction then removing sign from correlation
+    price_correlation_df['relationship'] = price_correlation_df['correlation'].apply(lambda x: 'direct' if x >= 0 else 'inverse')
+    price_correlation_df['correlation'] = price_correlation_df['correlation'].apply(lambda x: abs(x))
+    
+    # sorting descending by correlation and removing price
+    price_correlation_df = price_correlation_df.sort_values(['correlation'], ascending=False)
+    price_correlation_df = price_correlation_df[1:]
+    
+    # pruning out price_dist_ratio because it can't be used for regression
+    price_correlation_df = price_correlation_df.drop(['price_dist_ratio'], axis=0)
+    
+    # really only the top 5 or so matter, the rest drop off quickly
+    price_correlation_df = price_correlation_df[0:5]
+    
+    price_correlation_df = price_correlation_df.reset_index()
+    price_correlation_df.columns = ['variable', 'correlation', 'relationship']
+    
+    # printing the result and plotting
+    print(price_correlation_df)
+    
+    plt.figure()
+    plt.bar(x=price_correlation_df['variable'], height=price_correlation_df['correlation'], color=price_correlation_df['relationship'].map({'direct':'green','inverse':'black'}))
+    plt.xticks(rotation=45)
+    plt.xlabel('Variable')
+    plt.ylabel('Correlation Strength')
+    plt.title('Uber Variable Correlations (Top 5)')
+    direct_label = patches.Patch(color='green', label='Direct')
+    inverse_label = patches.Patch(color='black', label='Inverse')
+    plt.legend(handles=[direct_label, inverse_label], loc='upper right')
+    plt.show()
 
-# df.join(other=rent_df, on)
+    print('END UBER CORRELATION MATRIX')
+    print('________________________________________________________________\n')
 
-# getting a list of all the neighborhoods in the df and from the rent-cafe data
-source_neighborhoods = list(df['source'].unique())
-source_neighborhoods.sort()
-destination_neighborhoods = list(df['destination'].unique())
-destination_neighborhoods.sort()
-rent_neighborhoods = list(rent_df['neighborhood'])
-rent_neighborhoods.sort()
+# creates correlation matrix for lyft
+def lyft_correlation_matrix(lyft_frame):
+    print('________________________________________________________________\n')
+    print('LYFT CORRELATION MATRIX')
+    
+    # getting correlation matrix of variables to price
+    price_correlation_df = lyft_frame.corr()['price'].to_frame()
+    price_correlation_df.columns = ['correlation']
+    
+    # recording direction then removing sign from correlation
+    price_correlation_df['relationship'] = price_correlation_df['correlation'].apply(lambda x: 'direct' if x >= 0 else 'inverse')
+    price_correlation_df['correlation'] = price_correlation_df['correlation'].apply(lambda x: abs(x))
+    
+    # sorting descending by correlation and removing price
+    price_correlation_df = price_correlation_df.sort_values(['correlation'], ascending=False)
+    price_correlation_df = price_correlation_df[1:]
+    
+    # pruning out price_dist_ratio because it can't be used for regression
+    price_correlation_df = price_correlation_df.drop(['price_dist_ratio'], axis=0)
+    
+    # really only the top 5 or so matter, the rest drop off quickly
+    price_correlation_df = price_correlation_df[0:5]
+    
+    price_correlation_df = price_correlation_df.reset_index()
+    price_correlation_df.columns = ['variable', 'correlation', 'relationship']
+    
+    # printing the result and plotting
+    print(price_correlation_df)
+    
+    plt.figure()
+    plt.bar(x=price_correlation_df['variable'], height=price_correlation_df['correlation'], color=price_correlation_df['relationship'].map({'direct':'red','inverse':'black'}))
+    plt.xticks(rotation=45)
+    plt.xlabel('Variable')
+    plt.ylabel('Correlation Strength')
+    plt.title('Lyft Variable Correlations (Top 5)')
+    direct_label = patches.Patch(color='red', label='Direct')
+    inverse_label = patches.Patch(color='black', label='Inverse')
+    plt.legend(handles=[direct_label, inverse_label], loc='upper right')
+    plt.show()
 
-# printing each out to see what needs to be renamed/removed
-print(source_neighborhoods)
-print(destination_neighborhoods)
-print(rent_neighborhoods)
-
-blank_col = [0] * len(rent_df)
-rent_df['isKept'] = blank_col
-rent_df = rent_df.set_index(['neighborhood'])
-
-
-# manually looking through results and figuring out how to rename
-rent_df.loc['Back Bay', ['isKept']] = 1
-rent_df.loc['Beacon Hill', ['isKept']] = 1
-
-# Boston University missing, as per googling will make this Fenway
-rent_df.loc['Boston University'] = rent_df.loc['Fenway - Kenmore']
-rent_df.loc['Boston University', ['isKept']] = 1
-
-# Fenway - Kenmore becomes Fenway
-rent_df.loc['Fenway'] = rent_df.loc['Fenway - Kenmore']
-rent_df.loc['Fenway', ['isKept']] = 1
-
-# Downtown - Financial District becomes Financial District
-rent_df.loc['Financial District'] = rent_df.loc['Downtown - Financial District']
-rent_df.loc['Financial District', ['isKept']] = 1
-
-# haymarket square is between west and south end? going to use average of south/west end rent
-rent_df.loc['Haymarket Square'] = rent_df.loc['South End Boston']
-south_west_avg = statistics.mean([rent_df.loc['South End Boston']['average_rent'], rent_df.loc['West End Boston']['average_rent']])
-rent_df.loc['Haymarket Square', ['average_rent']] = south_west_avg
-rent_df.loc['Haymarket Square', ['isKept']] = 1
-
-# north end boston becomes north end
-rent_df.loc['North End'] = rent_df.loc['North End Boston']
-rent_df.loc['North End', ['isKept']] = 1
-
-# north station is between north/west end, doing average
-rent_df.loc['North Station'] = rent_df.loc['North End Boston']
-north_west_avg = statistics.mean([rent_df.loc['North End Boston']['average_rent'], rent_df.loc['West End Boston']['average_rent']])
-rent_df.loc['North Station', ['average_rent']] = north_west_avg
-rent_df.loc['North Station', ['isKept']] = 1
-
-# northeastern university is in fenway - kenmore (already renamed to fenway and kept)
-rent_df.loc['Northeastern University'] = rent_df.loc['Fenway']
-
-# south station is downtown, which was renamed to financial district
-rent_df.loc['South Station'] = rent_df.loc['Financial District']
-
-# theatre district is bay village
-rent_df.loc['Theatre District'] = rent_df.loc['Bay Village']
-rent_df.loc['Theatre District', ['isKept']] = 1
-
-# west end boston becomes west end
-rent_df.loc['West End'] = rent_df.loc['West End Boston']
-rent_df.loc['West End', ['isKept']] = 1
-
-cleaned_rent_df = rent_df[rent_df['isKept'] == 1]
-cleaned_rent_df = cleaned_rent_df.drop(['isKept'], axis=1)
-
-cleaned_rent_df = cleaned_rent_df.set_index(['neighborhood'])
-# plotting quick bar chart... this wasn't as dramatic as i was hoping it would be
-plt.figure()
-cleaned_rent_df.plot(kind='bar')
-plt.xticks(rotation=45)
-plt.title('Average Rent by Neighborhood')
-plt.xlabel('Neighborhood')
-plt.ylabel('Average Rent (USD)')
-plt.show()
-
-
-cleaned_rent_df = cleaned_rent_df.reset_index()
-# joining back to the main df
-df = pd.merge(df, cleaned_rent_df, how='left', left_on='source', right_on='neighborhood')
-df = df.rename(columns={'average_rent': 'source_rent'})
-df = df.drop(['neighborhood'], axis=1)
-# doing the same for destination
-df = pd.merge(df, cleaned_rent_df, how='left', left_on='destination', right_on='neighborhood')
-df = df.rename(columns={'average_rent': 'destination_rent'})
-df = df.drop(['neighborhood'], axis=1)
-
-
-
+    print('END LYFT CORRELATION MATRIX')
+    print('________________________________________________________________\n')
 
 """
-    8. something with real estate prices?
+    7. LINEAR REGRESSION
 """
 
-# making a map of the prices, very disappointing
-# use c = price bin and make it x / mean price to have a nice gradient instead
-plt.figure()
-plt.scatter(df['longitude'], df['latitude'], s=1, c=df['price'], alpha=0.5)
-plt.title('Attempted Price Map of Boston')
-plt.xlabel('Longitude')
-plt.xlabel('Latitude')
-plt.show()
+# creates a few overall linear regression models
+def overall_linear_regression(rideshare_df):
+    print('________________________________________________________________\n')
+    print('OVERALL LINEAR REGRESSION:')
 
+    # starting with just distance
+    print('\nDistance Model:')
+    distance_model = ols("price ~ distance", rideshare_df).fit()
+    print(distance_model.summary())    
+    
+    # trying just surge
+    print('\nSurge Model:')
+    surge_model = ols("price ~ surge_multiplier", rideshare_df).fit()
+    print(surge_model.summary())
+    
+    # trying just cab type
+    print('\nCab Type Model:')    
+    cab_type_model = ols("price ~ is_uber", rideshare_df).fit()
+    print(cab_type_model.summary())
+    
+    # trying distance, surge, cab type, and the rents (top 5, these were the only variables with notable correlations)
+    print('\nCombo Model:')
+    combo_model = ols("price ~ distance + surge_multiplier + is_uber + source_rent + destination_rent", rideshare_df).fit()
+    print(combo_model.summary())
+    
+    # plotting scatterplot for the combo model
+    rideshare_df['predicted_price'] = combo_model.predict(rideshare_df[['distance', 'surge_multiplier', 'is_uber', 'source_rent', 'destination_rent']])
+    
+    plt.figure()
+    # actual prices in black, predicted in blue
+    plt.scatter(rideshare_df['distance'], rideshare_df['price'], s=0.1, c='black')
+    plt.scatter(rideshare_df['distance'], rideshare_df['predicted_price'], s=0.1, c='blue')
+    plt.title('Price vs. Distance (Overall)')
+    plt.xlabel('Distance (Miles)')
+    plt.ylabel('Price (USD)')
+    predicted_label = patches.Patch(color='blue', label='Predicted')
+    price_label = patches.Patch(color='black', label='Actual')
+    plt.legend(handles=[predicted_label, price_label], loc='upper right')
+    plt.show()
+    
+    print('END OVERALL LINEAR REGRESSION')
+    print('________________________________________________________________\n')
 
-# what about average price of the different neighborhoods?
-# source average price frame
-source_price_df = df.groupby(['source'])['price'].mean().to_frame()
-source_price_df.columns = ['avg_source_price']
+# creates ols model for uber
+def uber_linear_regression(uber_frame):
+    print('________________________________________________________________\n')
+    print('OVERALL UBER REGRESSION:')
 
-# destination average price frame
-destination_price_df = df.groupby(['destination'])['price'].mean().to_frame()
-destination_price_df.columns = ['avg_destination_price']
+    # starting with just distance
+    print('\nDistance Model:')
+    distance_model = ols("price ~ distance", uber_frame).fit()
+    print(distance_model.summary())    
+    
+    # trying distance and the rents
+    print('\nCombo Model:')
+    combo_model = ols("price ~ distance + source_rent + destination_rent", uber_frame).fit()
+    print(combo_model.summary())
+    
+    # plotting scatterplot for the combo model
+    uber_frame['predicted_price'] = combo_model.predict(uber_frame[['distance', 'source_rent', 'destination_rent']])
+    
+    plt.figure()
+    # actual prices in black, predicted in green
+    plt.scatter(uber_frame['distance'], uber_frame['price'], s=0.1, c='black')
+    plt.scatter(uber_frame['distance'], uber_frame['predicted_price'], s=0.1, c='green')
+    plt.title('Price vs. Distance (Uber)')
+    plt.xlabel('Distance (Miles)')
+    plt.ylabel('Price (USD)')
+    predicted_label = patches.Patch(color='green', label='Predicted')
+    price_label = patches.Patch(color='black', label='Actual')
+    plt.legend(handles=[predicted_label, price_label], loc='upper right')
+    plt.show()
+    
+    print('END OVERALL UBER REGRESSION')
+    print('________________________________________________________________\n')
 
-# adding in rent price
-rent_price_df = cleaned_rent_df
-rent_price_df = rent_price_df.reset_index()
-rent_price_df.columns = ['source', 'avg_rent_thousands']
-rent_price_df = rent_price_df.set_index(['source'])
+# creates ols models for lyft
+def lyft_linear_regression(lyft_frame):
+    print('________________________________________________________________\n')
+    print('LYFT LINEAR REGRESSION:')
 
-# joining on index
-neighborhood_df = source_price_df.merge(destination_price_df, how='left', left_index=True, right_index=True)
-neighborhood_df = neighborhood_df.merge(rent_price_df, how='left', left_index=True, right_index=True)
-neighborhood_df['avg_rent_thousands'] = neighborhood_df['avg_rent_thousands'] / 1000
+    # starting with just distance
+    print('\nDistance Model:')
+    distance_model = ols("price ~ distance", lyft_frame).fit()
+    print(distance_model.summary())    
+    
+    # trying just surge
+    print('\nSurge Model:')
+    surge_model = ols("price ~ surge_multiplier", lyft_frame).fit()
+    print(surge_model.summary())
+        
+    # trying distance, surge, and the rents
+    print('\nCombo Model:')
+    combo_model = ols("price ~ distance + surge_multiplier + source_rent + destination_rent", lyft_frame).fit()
+    print(combo_model.summary())
+    
+    # plotting scatterplot for the combo model
+    lyft_frame['predicted_price'] = combo_model.predict(lyft_frame[['distance', 'surge_multiplier', 'source_rent', 'destination_rent']])
+    
+    plt.figure()
+    # actual prices in black, predicted in red
+    plt.scatter(lyft_frame['distance'], lyft_frame['price'], s=0.1, c='black')
+    plt.scatter(lyft_frame['distance'], lyft_frame['predicted_price'], s=0.1, c='red')
+    plt.title('Price vs. Distance (Lyft)')
+    plt.xlabel('Distance (Miles)')
+    plt.ylabel('Price (USD)')
+    predicted_label = patches.Patch(color='red', label='Predicted')
+    price_label = patches.Patch(color='black', label='Actual')
+    plt.legend(handles=[predicted_label, price_label], loc='upper right')
+    plt.show()
+    
+    print('END LYFT LINEAR REGRESSION')
+    print('________________________________________________________________\n')
 
-# weak relationship between rent and rideshare prices
-plt.figure()
-neighborhood_df.plot(kind='bar')
-plt.title('Average Pricing and Rent by Neighborhood')
-plt.xlabel('Neighborhood')
-plt.xticks(fontsize=8)
-plt.ylabel('Average Price (USD) or Rent (thousands USD)')
-plt.show()
+"""
+    8. MAIN FUNCTION
+"""
 
-# modest inverse correlation
-print(neighborhood_df.corr().to_string())
+# overarching program logic; this will run straight through, leave a record on the console, and create plots
+def main():
+    # start notice
+    print('Initializing...')
+    
+    # loading data from csvs
+    rideshare_df = load_rideshare()
+    rent_df = load_rents()
+    
+    # cleaning data
+    rideshare_df = clean_rideshare(rideshare_df)
+    rent_df = clean_rent(rent_df, rideshare_df)
+    
+    # adding features
+    rideshare_df = add_is_uber(rideshare_df)
+    rideshare_df = add_price_dist_ratio(rideshare_df)
+    rideshare_df = add_average_rents(rideshare_df, rent_df)
+    uber_frame = get_uber_frame(rideshare_df)
+    lyft_frame = get_lyft_frame(rideshare_df)
+    
+    # distribution exploration
+    prelim_exploration(rideshare_df)
+    value_count_exploration(rideshare_df)
+    name_exploration(rideshare_df)
 
+    # graphical analyses
+    average_price_by_name(uber_frame, lyft_frame)
+    total_price_by_name(uber_frame, lyft_frame)
+    average_price_by_weather(rideshare_df, uber_frame, lyft_frame)
+    average_distance_by_weather(rideshare_df, uber_frame, lyft_frame)
+    average_price_by_hour(rideshare_df, uber_frame, lyft_frame)
+    average_price_dist_ratio_by_hour(rideshare_df, uber_frame, lyft_frame)
+    average_surge_mult_by_hour(lyft_frame)
+    average_rent_by_neighborhood(rent_df)
+    price_map(rideshare_df)
+    average_price_rent_by_neighborhood(rideshare_df, rent_df)
+    
+    # correlation
+    overall_correlation_matrix(rideshare_df)
+    uber_correlation_matrix(uber_frame)
+    lyft_correlation_matrix(lyft_frame)
+    
+    # linear regression
+    overall_linear_regression(rideshare_df)
+    uber_linear_regression(uber_frame)
+    lyft_linear_regression(lyft_frame)
+    
+    # exit notice
+    print('Exiting...')
 
-# code here
+"""
+    9. MAIN CALL
+"""
 
+main()
