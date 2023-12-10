@@ -430,6 +430,41 @@ def average_price_by_hour(rideshare_df, uber_frame, lyft_frame):
     print('END AVERAGE PRICE BY HOUR')
     print('________________________________________________________________\n')
 
+# analyses total number of rides by hour of the day
+def total_volume_by_hour(rideshare_df, uber_frame, lyft_frame):
+    print('________________________________________________________________\n')
+    print('TOTAL VOLUME OF RIDES BY HOUR:')
+
+    # making frames for overall/uber/lyft with total volume agg by hour (counting any variable)
+    hour_volume_df = rideshare_df.groupby(['hour'])['hour'].count()
+    hour_volume_uber = uber_frame.groupby(['hour'])['hour'].count()
+    hour_volume_lyft = lyft_frame.groupby(['hour'])['hour'].count()
+
+    # printing results
+    print('Overall:')
+    print(hour_volume_df)
+    print('Uber:')
+    print(hour_volume_uber)
+    print('Lyft:')
+    print(hour_volume_lyft)
+    
+    # plotting multi line chart
+    plt.figure()
+    hour_volume_df.plot(kind='line')
+    hour_volume_uber.plot(kind='line', color='green')
+    hour_volume_lyft.plot(kind='line', color='red')
+    plt.title('Total Number of Rides by Hour')
+    plt.xlabel('Hour')
+    plt.ylabel('Number of Rides')
+    overall_label = patches.Patch(color='blue', label='Overall')
+    uber_label = patches.Patch(color='green', label='Uber')
+    lyft_label = patches.Patch(color='red', label='Lyft')
+    plt.legend(handles=[overall_label, uber_label, lyft_label], loc='upper right')
+    plt.show()
+
+    print('END TOTAL VOLUME OF RIDES BY HOUR')
+    print('________________________________________________________________\n')
+
 # analyses average price/dist ratio of a ride by hour of the day
 def average_price_dist_ratio_by_hour(rideshare_df, uber_frame, lyft_frame):
     print('________________________________________________________________\n')
@@ -749,7 +784,7 @@ def overall_linear_regression(rideshare_df):
 # creates ols model for uber
 def uber_linear_regression(uber_frame):
     print('________________________________________________________________\n')
-    print('OVERALL UBER REGRESSION:')
+    print('UBER LINEAR REGRESSION:')
 
     # starting with just distance
     print('\nDistance Model:')
@@ -776,7 +811,7 @@ def uber_linear_regression(uber_frame):
     plt.legend(handles=[predicted_label, price_label], loc='upper right')
     plt.show()
     
-    print('END OVERALL UBER REGRESSION')
+    print('END UBER LINEAR REGRESSION')
     print('________________________________________________________________\n')
 
 # creates ols models for lyft
@@ -852,6 +887,7 @@ def main():
     average_price_by_weather(rideshare_df, uber_frame, lyft_frame)
     average_distance_by_weather(rideshare_df, uber_frame, lyft_frame)
     average_price_by_hour(rideshare_df, uber_frame, lyft_frame)
+    total_volume_by_hour(rideshare_df, uber_frame, lyft_frame)
     average_price_dist_ratio_by_hour(rideshare_df, uber_frame, lyft_frame)
     average_surge_mult_by_hour(lyft_frame)
     average_rent_by_neighborhood(rent_df)
