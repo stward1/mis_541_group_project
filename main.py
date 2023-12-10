@@ -12,39 +12,19 @@ Sections:
     2. CLEANING THE DATA
         * Imputing missing or null values
     3. FEATURE CREATION
+        * Adding columns for better analysis
     4. DISTRIBUTION EXPLORATION
+        * Examining value counts of various columns
     5. GRAPHICAL ANALYSES
+        * Displaying charts/graphs of different facets of the data
     6. CORRELATION MATRICES
+        * Making correlation matrices to decide which features to use for modeling
     7. LINEAR REGRESSION
+        * Creating Ordinary Least Squares regression models for the data
     8. MAIN FUNCTION
+        * Laying out the overarching program logic
     9. MAIN CALL
-        
-        
-    3. DISTRIBUTION EXPLORATION
-        * Examining the distribution of major variables
-    4. CORRELATION MATRIX
-        * Generating a correlation matrix to find which variables relate to price
-    5. LINEAR REGRESSION
-        * Modeling price using linear regression (may want to use a variable selection technique?)
-    6. UBER VS. LYFT LINEAR REGRESSION
-        * Creating price regression models for Uber and Lyft separately and comparing them
-    7. PRICE MAP
-        * Using latitude and longitude to create a map of ride prices
-    8. Maybe something with real estate prices? If we found a dataset of Boston prices to overlay with rideshare
-    
-Questions we're answering:
-    What are the most important predictors for rideshare prices?
-    Do the predictors vary for Uber vs. Lyft?
-    How does rideshare price vary in different parts of Boston?
-    Do the rideshare prices relate to real estate prices?
-    Maybe something with weather and pricing/demand for rideshares?
-    Do people use rideshares more when it's rainy/sunny/etc.?
-
-    business impact aspects:
-        * should you prepare more drivers based on the weather forecast?
-        * consumer and business side (things as a user and uber/lyft)
-        
-    timeline: due week of the 6th
+        * Running the main function
 
 """
 
